@@ -1,0 +1,92 @@
+services:
+  # Main API Server
+  - type: web
+    name: dragon-telegram-api
+    runtime: node
+    region: oregon
+    plan: free
+    branch: master
+    buildCommand: pnpm install && pnpm build
+    startCommand: node dist/_core/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        value: postgresql://username:password@localhost:5432/dragaan_pro
+      - key: TELEGRAM_API_ID
+        sync: false
+      - key: TELEGRAM_API_HASH
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: dragon-telegram-redis
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: ANTI_BAN_ENABLED
+        value: true
+      - key: DEFAULT_MESSAGE_DELAY_MS
+        value: 2000
+      - key: DEFAULT_ACTION_DELAY_MS
+        value: 3000
+      - key: MAX_MESSAGES_PER_DAY
+        value: 100
+      - key: MAX_GROUPS_JOIN_PER_DAY
+        value: 10
+      - key: ENABLE_LICENSE_CHECK
+        value: false
+      - key: ENABLE_ANALYTICS
+        value: true
+      - key: LOG_LEVEL
+        value: info
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # Worker Process for Background Jobs
+  - type: worker
+    name: dragon-telegram-worker
+    runtime: node
+    region: oregon
+    plan: free
+    branch: master
+    buildCommand: pnpm install && pnpm build:worker
+    startCommand: node dist/worker.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: postgresql://username:password@localhost:5432/dragaan_pro
+      - key: TELEGRAM_API_ID
+        sync: false
+      - key: TELEGRAM_API_HASH
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: dragon-telegram-redis
+          property: connectionString
+      - key: ANTI_BAN_ENABLED
+        value: true
+      - key: LOG_LEVEL
+        value: info
+    autoDeploy: true
+
+databases:
+  # Redis for Queue System
+  - name: dragon-telegram-redis
+    plan: free
+    region: oregon
+    ipAllowList: []

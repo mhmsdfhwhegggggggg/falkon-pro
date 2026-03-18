@@ -1,0 +1,47 @@
+services:
+  # Main API Server
+  - type: web
+    name: dragaan-api
+    runtime: node
+    plan: free
+    buildCommand: pnpm install && pnpm build
+    startCommand: node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dragaan-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: dragaan-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: ANTI_BAN_ENABLED
+        value: true
+      - key: ENABLE_LICENSE_CHECK
+        value: false
+      - key: DEBUG
+        value: false
+    healthCheckPath: /health
+
+  # Redis for Queue System
+  - type: redis
+    name: dragaan-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+
+databases:
+  # PostgreSQL Database
+  - name: dragaan-db
+    databaseName: dragaan
+    plan: free
