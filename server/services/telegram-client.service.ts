@@ -64,18 +64,29 @@ export class TelegramClientService {
   ): Promise<TelegramClient> {
     const credentials = apiId && apiHash ? { apiId, apiHash } : this.getApiCredentials();
 
-    const session = new StringSession(sessionString);
-    const client = new TelegramClient(session, credentials.apiId, credentials.apiHash, {
-      connectionRetries: 5,
-      retryDelay: 2000,
-    });
+    if (!sessionString || sessionString.trim() === "") {
+        throw new Error("Empty or missing session string for this account.");
+    }
 
-    await client.connect();
+    try {
+        const session = new StringSession(sessionString);
+        const client = new TelegramClient(session, credentials.apiId, credentials.apiHash, {
+            connectionRetries: 5,
+            retryDelay: 2000,
+        });
 
-    // Store client for reuse
-    TelegramClientService.clients.set(accountId, client);
+        await client.connect();
 
-    return client;
+        // Store client for reuse
+        TelegramClientService.clients.set(accountId, client);
+
+        return client;
+    } catch (err: any) {
+        if (err.message?.includes("Not a valid string")) {
+            throw new Error(`Invalid session string format for account ${accountId}. Please re-authenticate.`);
+        }
+        throw err;
+    }
   }
 
   /**

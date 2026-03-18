@@ -79,14 +79,16 @@ export class StartupService {
 
         for (const account of accounts) {
             try {
+                logger.info(`[Startup] Initializing account ${account.id} (${account.phoneNumber})...`);
                 await telegramClientService.initializeClient(
                     account.id,
                     account.phoneNumber,
                     account.sessionString
                 );
-                logger.info(`[Startup] Connected account ${account.id} (${account.phoneNumber})`);
+                logger.info(`[Startup] ✅ Connected account ${account.id} (${account.phoneNumber})`);
             } catch (error: any) {
-                logger.error(`[Startup] Failed to connect account ${account.id}`, { error: error.message });
+                logger.error(`[Startup] ❌ Failed to connect account ${account.id} (${account.phoneNumber}): ${error.message}`);
+                // Continue to next account
             }
         }
 
