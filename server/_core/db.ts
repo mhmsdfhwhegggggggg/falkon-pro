@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { ENV } from "./env";
-import * as schema from "../../drizzle/schema";
+import * as schema from "../db/schema";
 import { Secrets } from "./secrets";
 
 const url = Secrets.getDatabaseUrl() || ENV.databaseUrl;

@@ -8,6 +8,10 @@ export type TrpcContext = {
   user: User | null;
 };
 
+export type AuthenticatedContext = Omit<TrpcContext, "user"> & {
+  user: User;
+};
+
 export async function createContext(opts: CreateExpressContextOptions): Promise<TrpcContext> {
   let user: User | null = null;
 

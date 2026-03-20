@@ -266,22 +266,21 @@ export class CacheSystem {
     const ttl = options.ttl || this.DEFAULT_TTL;
 
     try {
-      const pipeline = this.redis.pipeline();
-
       for (const { key, value } of entries) {
         const fullKey = this.buildKey(key, options.namespace);
-        const serialized = this.serialize(value);
 
         // Store in L1
         this.l1Cache.set(fullKey, value);
-
-        // Store in L2
-        if (this.redis) {
-          pipeline.setex(fullKey, ttl, serialized);
-        }
       }
 
+      // Store in L2
       if (this.redis) {
+        const pipeline = this.redis.pipeline();
+        for (const { key, value } of entries) {
+          const fullKey = this.buildKey(key, options.namespace);
+          const serialized = this.serialize(value);
+          pipeline.setex(fullKey, ttl, serialized);
+        }
         await pipeline.exec();
       }
       this.metrics.sets += entries.length;

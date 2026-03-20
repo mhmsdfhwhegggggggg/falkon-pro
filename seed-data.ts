@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "./drizzle/schema";
+import * as schema from "./server/db/schema";
 
 const connectionString = "postgresql://postgres:password@localhost:5432/dragon_telegram_pro";
 const client = postgres(connectionString);
@@ -13,7 +13,7 @@ async function seed() {
   const [user] = await db.insert(schema.users).values({
     email: "user@example.com",
     username: "DragonUser",
-    passwordHash: "hashed_password",
+    password: "hashed_password",
   }).returning();
   
   console.log(`Created user: ${user.username}`);
@@ -51,16 +51,18 @@ async function seed() {
   // 3. Create some activity logs
   await db.insert(schema.activityLogs).values([
     {
-      accountId: accounts[0].id,
+      userId: user.id,
+      telegramAccountId: accounts[0].id,
       action: "message_sent",
       status: "success",
-      actionDetails: { to: "user123", message: "Hello!" },
+      details: JSON.stringify({ to: "user123", message: "Hello!" }),
     },
     {
-      accountId: accounts[1].id,
+      userId: user.id,
+      telegramAccountId: accounts[1].id,
       action: "member_extracted",
       status: "success",
-      actionDetails: { groupId: "group456", count: 150 },
+      details: JSON.stringify({ groupId: "group456", count: 150 }),
     }
   ]);
   

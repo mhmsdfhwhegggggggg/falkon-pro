@@ -288,7 +288,7 @@ export class ActivationSystem {
       };
 
       // Encrypt activation data
-      const encryptedData = licenseManager.encrypt(JSON.stringify(activationData));
+      const encryptedData = licenseManager.encryptData(JSON.stringify(activationData));
 
       return encryptedData;
 
@@ -304,7 +304,7 @@ export class ActivationSystem {
   async activateFromOfflineFile(encryptedData: string, hardwareId: string): Promise<ActivationResponse> {
     try {
       // Decrypt activation data
-      const activationData = JSON.parse(licenseManager.decrypt(encryptedData));
+      const activationData = JSON.parse(licenseManager.decryptData(encryptedData));
 
       // Verify hardware ID
       if (activationData.hardwareId !== hardwareId) {
@@ -377,7 +377,6 @@ export class ActivationSystem {
     }
   }
 
-  /**
   /**
    * Get activation statistics (REAL IMPLEMENTATION)
    */

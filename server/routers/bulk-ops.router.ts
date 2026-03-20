@@ -25,7 +25,7 @@ export const bulkOpsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const account = await db.getTelegramAccountById(input.accountId);
-      if (!account || account.userId !== ctx.user.id) {
+      if (!account || account.userId !== ctx.user!.id) {
         throw new Error("Account not found or unauthorized");
       }
       const job = await JobQueue.enqueue("send-bulk-messages", {
@@ -58,7 +58,7 @@ export const bulkOpsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const account = await db.getTelegramAccountById(input.accountId);
-      if (!account || account.userId !== ctx.user.id) {
+      if (!account || account.userId !== ctx.user!.id) {
         throw new Error("Account not found or unauthorized");
       }
 
@@ -91,7 +91,7 @@ export const bulkOpsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const account = await db.getTelegramAccountById(input.accountId);
-      if (!account || account.userId !== ctx.user.id) {
+      if (!account || account.userId !== ctx.user!.id) {
         throw new Error("Account not found or unauthorized");
       }
       const job = await JobQueue.enqueue("join-groups", {
@@ -116,7 +116,7 @@ export const bulkOpsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const account = await db.getTelegramAccountById(input.accountId);
-      if (!account || account.userId !== ctx.user.id) {
+      if (!account || account.userId !== ctx.user!.id) {
         throw new Error("Account not found or unauthorized");
       }
       const job = await JobQueue.enqueue("add-users", {
@@ -196,13 +196,13 @@ export const bulkOpsRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
         // Create operation record
         const operation = await db.createBulkOperation({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           name: `Bulk Messages - ${new Date().toISOString()}`,
           operationType: "messages",
           status: "running",
@@ -246,7 +246,7 @@ export const bulkOpsRouter = router({
 
         // Log activity
         await db.createActivityLog({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           telegramAccountId: input.accountId,
           action: "bulk_messages_sent",
           details: JSON.stringify({
@@ -288,12 +288,12 @@ export const bulkOpsRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
         const operation = await db.createBulkOperation({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           name: `Join Groups - ${new Date().toISOString()}`,
           operationType: "join-groups",
           status: "running",
@@ -337,7 +337,7 @@ export const bulkOpsRouter = router({
         });
 
         await db.createActivityLog({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           telegramAccountId: input.accountId,
           action: "groups_joined",
           details: JSON.stringify({
@@ -380,12 +380,12 @@ export const bulkOpsRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
         const operation = await db.createBulkOperation({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           name: `Add Users - ${new Date().toISOString()}`,
           operationType: "add-users",
           status: "running",
@@ -431,7 +431,7 @@ export const bulkOpsRouter = router({
         });
 
         await db.createActivityLog({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           telegramAccountId: input.accountId,
           action: "users_added_to_group",
           details: JSON.stringify({
@@ -468,11 +468,11 @@ export const bulkOpsRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
-        const operations = await db.getBulkOperationsByUserId(ctx.user.id);
+        const operations = await db.getBulkOperationsByUserId(ctx.user!.id);
 
         return {
           success: true,

@@ -110,7 +110,7 @@ export class AutoReplyService {
 
     try {
       await telegramClientService.addEventHandler(accountId, async (event) => {
-        if (event instanceof NewMessage && event.message) {
+        if (event instanceof NewMessage && (event as any).message) {
           await this.handleNewMessage(accountId, event);
         }
       }, new NewMessage({}));

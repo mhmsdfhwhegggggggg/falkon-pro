@@ -12,8 +12,8 @@
  * @author FALCON Team
  */
 
-import { TelegramClient } from 'telegram';
-import { Api } from 'telegram';
+import { TelegramClient, Api } from 'telegram';
+import { CustomFile } from 'telegram/client/uploads';
 import { logger } from '../_core/logger';
 import { CacheSystem } from '../_core/cache-system';
 import { antiBanEngineV5 } from './anti-ban-engine-v5';
@@ -175,7 +175,7 @@ export class ChannelManagementService {
       const entity = await client.getEntity(channelId);
       const untilDate = mute ? 2147483647 : 0; // Forever or now
       await client.invoke(new Api.account.UpdateNotifySettings({
-        peer: new Api.InputNotifyPeer({ peer: entity }),
+        peer: new Api.InputNotifyPeer({ peer: entity as any }),
         settings: new Api.InputPeerNotifySettings({
           muteUntil: untilDate
         })
@@ -344,11 +344,7 @@ export class ChannelManagementService {
         case 'video':
           const videoBuffer = fs.readFileSync(content.mediaPath!);
           const videoFile = await client.uploadFile({
-            file: {
-              name: `video-${Date.now()}.mp4`,
-              data: videoBuffer,
-              mimeType: 'video/mp4'
-            },
+            file: new CustomFile(`video-${Date.now()}.mp4`, videoBuffer.length, '', videoBuffer),
             workers: 1
           });
 
@@ -362,11 +358,7 @@ export class ChannelManagementService {
         case 'file':
           const fileBuffer = fs.readFileSync(content.mediaPath!);
           const dataFile = await client.uploadFile({
-            file: {
-              name: `file-${Date.now()}.bin`,
-              data: fileBuffer,
-              mimeType: 'application/octet-stream'
-            },
+            file: new CustomFile(`file-${Date.now()}.bin`, fileBuffer.length, '', fileBuffer),
             workers: 1
           });
 
@@ -383,12 +375,11 @@ export class ChannelManagementService {
 
       // Pin message if requested
       if (content.pinned && message) {
-        await client.invoke({
-          _: 'messages.updatePinnedMessage',
+        await client.invoke(new Api.messages.UpdatePinnedMessage({
           peer: channelId,
           id: message.id,
-          pinned: true
-        });
+          unpin: false
+        } as any));
       }
 
       this.logger.info('[Channel] Content posted successfully', { messageId: message.id });

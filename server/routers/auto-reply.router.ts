@@ -58,7 +58,7 @@ export const autoReplyRouter = router({
         const rule = await autoReplyService.createRule({
           name: input.name,
           accountId: input.accountId,
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           keywords: input.keywords,
           matchType: input.matchType as any,
           replyType: input.replyType as any,

@@ -21,7 +21,7 @@ export const statsRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
@@ -55,7 +55,7 @@ export const statsRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
@@ -101,7 +101,7 @@ export const statsRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
@@ -133,7 +133,7 @@ export const statsRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
@@ -180,7 +180,7 @@ export const statsRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 

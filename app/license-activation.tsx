@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Platform } from 'react-native';
 import { trpc } from '@/lib/trpc';
 import { getHardwareId } from '@/lib/hwid';
 import { router } from 'expo-router';
-import { BlurView } from 'expo-blur';
 
 export default function LicenseActivationScreen() {
   const [licenseKey, setLicenseKey] = useState('');
@@ -44,7 +43,7 @@ export default function LicenseActivationScreen() {
 
   return (
     <View style={styles.container}>
-      <BlurView intensity={30} style={styles.card}>
+      <View style={styles.card}>
         <Text style={styles.title}>تفعيل التنين برو 🐉</Text>
         <Text style={styles.subtitle}>يرجى إدخال مفتاح الترخيص الخاص بك للمتابعة</Text>
 
@@ -80,7 +79,7 @@ export default function LicenseActivationScreen() {
         <Text style={styles.footerText}>
           الترخيص مرتبط بهذا الجهاز فقط ولا يمكن نقله.
         </Text>
-      </BlurView>
+      </View>
     </View>
   );
 }

@@ -6,7 +6,7 @@ import * as dbHelper from "../db";
 export const accountsRouter = router({
   // Get all accounts for the current user
   getAll: licenseProtectedProcedure.query(async ({ ctx }) => {
-    const accounts = await dbHelper.getTelegramAccountsByUserId(ctx.user.id);
+    const accounts = await dbHelper.getTelegramAccountsByUserId(ctx.user!.id);
 
     return accounts.map((account) => ({
       id: account.id,
@@ -38,7 +38,7 @@ export const accountsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const newAccount = await dbHelper.createTelegramAccount({
-        userId: ctx.user.id,
+        userId: ctx.user!.id,
         phoneNumber: input.phoneNumber,
         sessionString: input.sessionString,
         firstName: input.firstName,
@@ -87,12 +87,12 @@ export const accountsRouter = router({
   bulkConfirmCodes: licenseProtectedProcedure
     .input(z.object({ items: z.array(z.object({ phoneNumber: z.string().min(5), code: z.string().min(2), password: z.string().optional() })).min(1) }))
     .mutation(async ({ input, ctx }) => {
-      const job = await JobQueue.enqueue("confirm-login-codes", { userId: ctx.user.id, items: input.items } as any);
+      const job = await JobQueue.enqueue("confirm-login-codes", { userId: ctx.user!.id, items: input.items } as any);
       return { queued: true, jobId: job.id } as const;
     }),
   // Get health overview (global)
   getHealthOverview: licenseProtectedProcedure.query(async ({ ctx }) => {
-    const accounts = await dbHelper.getTelegramAccountsByUserId(ctx.user.id);
+    const accounts = await dbHelper.getTelegramAccountsByUserId(ctx.user!.id);
     const healthyCount = accounts.filter(a => !a.isRestricted && a.isActive).length;
     const restrictedCount = accounts.filter(a => a.isRestricted).length;
     const inactiveCount = accounts.filter(a => !a.isActive).length;
