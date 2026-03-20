@@ -23,7 +23,7 @@ export const extractionRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
@@ -45,7 +45,7 @@ export const extractionRouter = router({
 
         // Save to database
         const extractedMembers = members.map((member: any) => ({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           telegramAccountId: input.accountId,
           sourceGroupId: input.groupId,
           memberTelegramId: String(member.id || member.userId),
@@ -59,7 +59,7 @@ export const extractionRouter = router({
 
         // Log activity
         await db.createActivityLog({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           action: "members_extracted",
           details: JSON.stringify({
             groupId: input.groupId,
@@ -80,7 +80,7 @@ export const extractionRouter = router({
       } catch (error) {
         console.error("Failed to extract members:", error);
         await db.createActivityLog({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           action: "members_extracted",
           details: JSON.stringify({ groupId: input.groupId }),
           status: "failed",
@@ -106,7 +106,7 @@ export const extractionRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
@@ -126,7 +126,7 @@ export const extractionRouter = router({
         );
 
         const extractedMembers = members.map((member: any) => ({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           telegramAccountId: input.accountId,
           sourceGroupId: input.groupId,
           memberTelegramId: String(member.id || member.userId),
@@ -139,7 +139,7 @@ export const extractionRouter = router({
         await db.createExtractedMembers(extractedMembers);
 
         await db.createActivityLog({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           action: "engaged_members_extracted",
           details: JSON.stringify({
             groupId: input.groupId,
@@ -178,7 +178,7 @@ export const extractionRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
@@ -197,7 +197,7 @@ export const extractionRouter = router({
         );
 
         const extractedAdmins = admins.map((admin: any) => ({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           telegramAccountId: input.accountId,
           sourceGroupId: input.groupId,
           memberTelegramId: String(admin.id || admin.userId),
@@ -210,7 +210,7 @@ export const extractionRouter = router({
         await db.createExtractedMembers(extractedAdmins);
 
         await db.createActivityLog({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           action: "admins_extracted",
           details: JSON.stringify({
             groupId: input.groupId,
@@ -248,12 +248,12 @@ export const extractionRouter = router({
       try {
         const account = await db.getTelegramAccountById(input.accountId);
 
-        if (!account || account.userId !== ctx.user.id) {
+        if (!account || account.userId !== ctx.user!.id) {
           throw new Error("Account not found or unauthorized");
         }
 
         const members = await db.getExtractedMembersByAccountAndGroup(
-          ctx.user.id,
+          ctx.user!.id,
           input.groupId
         );
 

@@ -71,7 +71,7 @@ export const contentClonerRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       try {
-        const ruleInput: any = { ...input, userId: ctx.user.id };
+        const ruleInput: any = { ...input, userId: ctx.user!.id };
         const rule = await contentClonerService.createRule(ruleInput);
 
         return {

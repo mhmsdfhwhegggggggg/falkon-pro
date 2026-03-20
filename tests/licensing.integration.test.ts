@@ -96,7 +96,7 @@ describe("Licensing Integration", () => {
 
         const result = await caller.license.generateLicense({
             userId: testUser.id,
-            type: "pro",
+            type: "premium",
             durationDays: 30,
             maxAccounts: 50,
             maxMessages: 5000

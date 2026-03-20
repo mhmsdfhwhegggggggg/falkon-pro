@@ -64,7 +64,7 @@ export const extractAddRouter = router({
 
         // Create bulk operation record first
         const operation = await db.createBulkOperation({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           name: `Extract & Add - ${new Date().toLocaleString()}`,
           description: 'Initializing pipeline...',
           operationType: 'extract_add_pipeline',
@@ -85,7 +85,7 @@ export const extractAddRouter = router({
 
         // Log activity (keep existing logging for consistency)
         await db.createActivityLog({
-          userId: ctx.user.id,
+          userId: ctx.user!.id,
           telegramAccountId: input.accountId,
           action: 'extract_add_pipeline',
           details: JSON.stringify({
@@ -205,7 +205,7 @@ export const extractAddRouter = router({
 
         // This is a simplification: getting all bulk ops for the user
         // Ideally we filter by accountId too if we stored it in bulkOperations
-        const allOps = await db.getBulkOperationsByUserId(ctx.user.id);
+        const allOps = await db.getBulkOperationsByUserId(ctx.user!.id);
 
         // Filter those relevant to this account (heuristic or need schema update)
         // For now, return all extract pipelines for the user 
@@ -262,7 +262,7 @@ export const extractAddRouter = router({
     }))
     .query(async ({ input, ctx }) => {
       try {
-        const allOps = await db.getBulkOperationsByUserId(ctx.user.id);
+        const allOps = await db.getBulkOperationsByUserId(ctx.user!.id);
         const pipelines = allOps.filter(op => op.operationType === 'extract_add_pipeline');
 
         const successful = pipelines.filter(p => p.status === 'completed');
@@ -453,11 +453,6 @@ export const extractAddRouter = router({
       try {
         // Real preview based on sampling
         const preview = await extractAddPipeline.getPreview({ ...input, sourceGroupId: input.sourceGroupId, speed: input.speed, filters: input.filters as any });
-        return {
-          success: true,
-          data: preview
-        };
-
         return {
           success: true,
           data: preview

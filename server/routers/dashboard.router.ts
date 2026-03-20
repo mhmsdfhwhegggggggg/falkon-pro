@@ -9,7 +9,7 @@ export const dashboardRouter = router({
       if (!database) throw new Error("DB not connected");
 
       // 1. Get account counts in one go
-      const accounts = await dbHelper.getTelegramAccountsByUserId(ctx.user.id);
+      const accounts = await dbHelper.getTelegramAccountsByUserId(ctx.user!.id);
       const totalAccounts = accounts.length;
       const activeAccounts = accounts.filter((a) => a.isActive).length;
 
@@ -17,7 +17,7 @@ export const dashboardRouter = router({
       const memberCountResult = await (database as any).execute(dbHelper.sql`
         SELECT COUNT(*) as count 
         FROM extracted_members 
-        WHERE user_id = ${ctx.user.id}
+        WHERE user_id = ${ctx.user!.id}
       `);
       const membersExtracted = Number(memberCountResult[0]?.count) || 0;
 
@@ -46,7 +46,7 @@ export const dashboardRouter = router({
       const logs = await (database as any).execute(dbHelper.sql`
         SELECT al.action, al.status, al.details, al.timestamp as "createdAt"
         FROM activity_logs al
-        WHERE al."userId" = ${ctx.user.id}
+        WHERE al."userId" = ${ctx.user!.id}
         ORDER BY al.timestamp DESC
         LIMIT 10
       `);

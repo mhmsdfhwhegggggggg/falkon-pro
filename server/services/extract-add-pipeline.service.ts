@@ -561,7 +561,7 @@ export class ExtractAddPipeline {
       let totalMembers = 0;
       try {
         const fullParticipants = await client.getParticipants(options.sourceGroupId, { limit: 0 });
-        totalMembers = fullParticipants.total;
+        totalMembers = fullParticipants.total ?? 0;
       } catch (e) {
         totalMembers = 5000; // Fallback
       }

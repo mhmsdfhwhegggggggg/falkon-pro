@@ -26,7 +26,7 @@ export interface ChatContext {
 
 export class AIChatEngine {
   private static instance: AIChatEngine;
-  private client: OpenAI;
+  private client!: OpenAI;
 
   private constructor() {
     // Client will be initialized on first use if key is available

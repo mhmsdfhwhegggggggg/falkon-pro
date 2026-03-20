@@ -2,6 +2,7 @@ import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from "../../shared/const.js";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
+import type { User } from "../db/schema";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -17,10 +18,13 @@ const requireUser = t.middleware(async (opts) => {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
   }
 
+  // Store narrowed user in a const to help TypeScript infer the non-null type
+  const user: User = ctx.user;
+
   return next({
     ctx: {
       ...ctx,
-      user: ctx.user,
+      user,
     },
   });
 });
@@ -35,10 +39,12 @@ export const adminProcedure = t.procedure.use(
       throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
     }
 
+    const user: User = ctx.user;
+
     return next({
       ctx: {
         ...ctx,
-        user: ctx.user,
+        user,
       },
     });
   }),

@@ -127,8 +127,8 @@ export class TelegramClientService {
           filter: { _: 'channelParticipantsRecent' },
           offset,
           limit,
-          hash: BigInt(0)
-        });
+          hash: BigInt(0) as any
+        } as any);
 
         if (!result || !(result as any).participants || (result as any).participants.length === 0) break;
 

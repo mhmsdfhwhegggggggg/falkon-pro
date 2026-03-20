@@ -25,7 +25,7 @@ export const proxiesRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const account = await db.getTelegramAccountById(input.accountId);
-      if (!account || account.userId !== ctx.user.id) {
+      if (!account || account.userId !== ctx.user!.id) {
         throw new Error("Account not found or unauthorized");
       }
 
@@ -82,7 +82,7 @@ export const proxiesRouter = router({
     .input(z.object({ accountId: z.number() }))
     .query(async ({ input, ctx }) => {
       const account = await db.getTelegramAccountById(input.accountId);
-      if (!account || account.userId !== ctx.user.id) {
+      if (!account || account.userId !== ctx.user!.id) {
         throw new Error("Account not found or unauthorized");
       }
       const proxies = await db.getProxyConfigsByAccountId(input.accountId);
