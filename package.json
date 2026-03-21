@@ -120,6 +120,5 @@
     "vitest": "^4.0.18",
     "webpack": "^5.105.0",
     "webpack-cli": "^6.0.1"
-  },
-  "packageManager": "pnpm@9.12.0"
+  }
 }
