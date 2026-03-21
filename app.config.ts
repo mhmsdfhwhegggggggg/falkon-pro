@@ -117,10 +117,16 @@ const config: ExpoConfig = {
         android: {
           buildArchs: ["armeabi-v7a", "arm64-v8a"],
           minSdkVersion: 24,
+          ndkVersion: "26.3.11579264",
         },
       },
     ],
   ],
+  extra: {
+    eas: {
+      projectId: "30d2b113-796d-42f3-b2f4-2ec5a86a62be",
+    },
+  },
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
