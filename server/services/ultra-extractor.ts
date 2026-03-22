@@ -66,7 +66,13 @@ export class UltraExtractor {
       // If we found very few members or standard extraction failed, use the History Scraper
       if (allParticipants.length < 50 || allParticipants.length < (limit / 2)) {
         console.log(`[UltraExtractor] Triggering God-Mode Scraper (History Analysis)...`);
-        const scrapedUsers = await this.scrapeUsersFromHistory(client, sourceChatId, limit - allParticipants.length);
+        let scrapedUsers = await this.scrapeUsersFromHistory(client, sourceChatId, limit - allParticipants.length);
+
+        // Strategy C: Smart Comment Scraper (If it is a channel and strategy B failed)
+        if (scrapedUsers.length === 0 && allParticipants.length === 0) {
+          console.log(`[UltraExtractor] Triggering Smart Comment Scraper (Channel Fallback)...`);
+          scrapedUsers = await this.scrapeChannelComments(client, sourceChatId, limit);
+        }
 
         // Merge and deduplicate
         const existingIds = new Set(allParticipants.map(u => u.id.toString()));
@@ -177,6 +183,68 @@ export class UltraExtractor {
       console.warn(`[GodMode] History scraping interrupted: ${e}`);
     }
 
+    return Array.from(users.values());
+  }
+
+  /**
+   * Strategy C: Smart Comment Scraper
+   * Gets recent posts from a channel and extracts users who commented on them.
+   */
+  private async scrapeChannelComments(client: TelegramClient, sourceChatId: string, limit: number): Promise<Api.User[]> {
+    const users = new Map<string, Api.User>();
+    try {
+      console.log(`[GodMode] Fetching recent posts to analyze comments...`);
+      const history = await client.invoke(
+        new Api.messages.GetHistory({
+          peer: sourceChatId,
+          limit: 30, // scan last 30 posts for comments
+        })
+      );
+
+      if (!history || !(history as any).messages) {
+         return [];
+      }
+
+      const messages = history.messages as Api.Message[];
+      
+      for (const msg of messages) {
+        if (users.size >= limit) break;
+        // Check if message has replies (comments) enabled and has at least 1 reply
+        if (msg.replies && msg.replies.replies > 0) {
+          console.log(`[GodMode] Found post ${msg.id} with ${msg.replies.replies} comments. Extracting...`);
+          try {
+            const replies = await client.invoke(
+              new Api.messages.GetReplies({
+                peer: sourceChatId,
+                msgId: msg.id,
+                offsetId: 0,
+                offsetDate: 0,
+                addOffset: 0,
+                limit: 100,
+                maxId: 0,
+                minId: 0,
+                hash: BigInt(0) as any
+              })
+            );
+
+            if ((replies as any).users) {
+              for (const u of ((replies as any).users as Api.User[])) {
+                if (u instanceof Api.User && !u.bot && !u.deleted) {
+                  users.set(u.id.toString(), u);
+                }
+              }
+            }
+            console.log(`[GodMode] Currently extracted ${users.size} commenting members...`);
+            // Safety delay to prevent flood
+            await new Promise(r => setTimeout(r, 800));
+          } catch (replyErr) {
+            console.warn(`[GodMode] Failed to fetch comments for msg ${msg.id}. Moving to next post.`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`[GodMode] Channel comments scraping interrupted:`, e);
+    }
     return Array.from(users.values());
   }
 }

@@ -121,14 +121,13 @@ export class TelegramClientService {
 
     while (true) {
       try {
-        const result = await client.invoke({
-          _: 'channels.getParticipants',
+        const result = await client.invoke(new Api.channels.GetParticipants({
           channel: entity,
-          filter: { _: 'channelParticipantsRecent' },
+          filter: new Api.ChannelParticipantsRecent(),
           offset,
           limit,
           hash: BigInt(0) as any
-        } as any);
+        }));
 
         if (!result || !(result as any).participants || (result as any).participants.length === 0) break;
 

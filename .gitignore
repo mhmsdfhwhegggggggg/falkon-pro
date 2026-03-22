@@ -92,3 +92,6 @@ android-sdk/
 
 expo-env.d.ts
 # @end expo-cli
+auth.json
+final-session.txt
+
