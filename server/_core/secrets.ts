@@ -41,6 +41,8 @@ export const Secrets = {
   getSessionEncKey(): string {
     const current = readSecrets();
     if (current.SESSION_ENC_KEY && current.SESSION_ENC_KEY.length > 0) return current.SESSION_ENC_KEY;
+    if (process.env.SESSION_ENC_KEY && process.env.SESSION_ENC_KEY.length > 0) return process.env.SESSION_ENC_KEY;
+    
     // Auto-generate 32-byte key (base64)
     const key = crypto.randomBytes(32).toString("base64");
     const next = { ...current, SESSION_ENC_KEY: key };
