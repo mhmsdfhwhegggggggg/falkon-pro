@@ -440,7 +440,12 @@ export async function deleteOldRateLimitTracking(cutoff: Date) {
 export async function getAllTelegramAccounts() {
   const db = await getDb();
   if (!db) throw new Error("Database not connected");
-  return db.select().from(telegramAccounts);
+  const accounts = await db.select().from(telegramAccounts);
+  // Decrypt session strings
+  return accounts.map(account => ({
+    ...account,
+    sessionString: decryptString(account.sessionString),
+  }));
 }
 
 export async function getTelegramAccount(id: number) {

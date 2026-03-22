@@ -70,7 +70,7 @@ export const Secrets = {
 
   getDatabaseUrl(): string | null {
     const s = readSecrets();
-    let url = s.DATABASE_URL || process.env.DATABASE_URL || null;
+    let url = process.env.DATABASE_URL || s.DATABASE_URL || null;
     if (url && (url.startsWith("psql '") || url.startsWith("psql \""))) {
       // Clean psql 'postgresql://...' format
       const match = url.match(/['"](postgresql:\/\/.*?)['"]/);
@@ -105,7 +105,7 @@ export const Secrets = {
 
   getRedisUrl(): string | null {
     const s = readSecrets();
-    return s.REDIS_URL || process.env.REDIS_URL || null;
+    return process.env.REDIS_URL || s.REDIS_URL || null;
   },
 
   setRedisUrl(url: string) {
