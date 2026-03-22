@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { GlassCard } from "@/components/ui/glass-card";
 import { trpc } from "@/lib/trpc";
 
 /**
@@ -83,19 +84,24 @@ export default function AccountsScreen() {
 
           {/* Smart Tools */}
           <View className="flex-row gap-3">
-            <TouchableOpacity
-              onPress={handleRemoveDuplicates}
-              className="flex-1 bg-surface border border-border p-4 rounded-2xl items-center gap-2"
-            >
-              <IconSymbol name="trash.fill" size={20} color={colors.error} />
-              <Text className="text-xs font-bold text-foreground">إزالة التكرار</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-1 bg-surface border border-border p-4 rounded-2xl items-center gap-2"
-            >
-              <IconSymbol name="flame.fill" size={20} color={colors.warning} />
-              <Text className="text-xs font-bold text-foreground">تسخين الكل</Text>
-            </TouchableOpacity>
+            <GlassCard delay={100} className="flex-1 p-0">
+              <TouchableOpacity
+                onPress={handleRemoveDuplicates}
+                className="p-4 items-center gap-2"
+              >
+                <IconSymbol name="trash.fill" size={20} color={colors.error} />
+                <Text className="text-xs font-bold text-foreground">إزالة التكرار</Text>
+              </TouchableOpacity>
+            </GlassCard>
+            
+            <GlassCard delay={200} className="flex-1 p-0">
+              <TouchableOpacity
+                className="p-4 items-center gap-2"
+              >
+                <IconSymbol name="flame.fill" size={20} color={colors.warning} />
+                <Text className="text-xs font-bold text-foreground">تسخين الكل</Text>
+              </TouchableOpacity>
+            </GlassCard>
           </View>
 
           {/* Accounts List */}
@@ -107,12 +113,13 @@ export default function AccountsScreen() {
                 <ActivityIndicator size="large" color={colors.primary} />
               </View>
             ) : accounts && accounts.length > 0 ? (
-              accounts.map((account: any) => (
-                <View
+              accounts.map((account: any, index: number) => (
+                <GlassCard
                   key={account.id}
-                  className="bg-surface rounded-2xl p-4 border border-border shadow-sm"
+                  delay={(index % 10) * 100}
+                  className="p-0"
                 >
-                  <View className="flex-row items-start justify-between">
+                  <View className="p-4 flex-row items-start justify-between">
                     <View className="flex-1">
                       {/* Phone and Status */}
                       <View className="flex-row items-center gap-2 mb-1">
@@ -187,7 +194,7 @@ export default function AccountsScreen() {
                       )}
                     </View>
                   </View>
-                </View>
+                </GlassCard>
               ))
             ) : (
               <View className="py-12 items-center bg-surface rounded-2xl border border-dashed border-border">

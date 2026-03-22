@@ -27,19 +27,19 @@ export function GlassCard({
 
     // Background colors with opacity for "Glass" effect
     const bgColors = {
-        default: 'rgba(255, 255, 255, 0.7)', // Light mode default
-        darkDefault: 'rgba(17, 24, 39, 0.7)', // Dark mode default (gray-900)
-        neon: 'rgba(124, 58, 237, 0.15)', // Purple/Neon
-        danger: 'rgba(239, 68, 68, 0.1)', // Red
-        success: 'rgba(34, 197, 94, 0.1)', // Green
+        default: 'rgba(255, 255, 255, 0.75)', // Light mode default
+        darkDefault: 'rgba(24, 24, 27, 0.65)', // Zinc-900 with nice transparency
+        neon: 'rgba(139, 92, 246, 0.12)', // Subtle Purple/Neon glow
+        danger: 'rgba(225, 29, 72, 0.12)', // Rose glow
+        success: 'rgba(16, 185, 129, 0.12)', // Emerald glow
     };
 
     const borderColors = {
-        default: 'rgba(229, 231, 235, 0.5)',
-        darkDefault: 'rgba(55, 65, 81, 0.5)',
-        neon: 'rgba(139, 92, 246, 0.5)',
-        danger: 'rgba(248, 113, 113, 0.4)',
-        success: 'rgba(74, 222, 128, 0.4)',
+        default: 'rgba(228, 228, 231, 0.6)', // Zinc-200 border
+        darkDefault: 'rgba(255, 255, 255, 0.08)', // Very subtle white border for dark glass
+        neon: 'rgba(139, 92, 246, 0.4)', // Purple accent border
+        danger: 'rgba(244, 63, 94, 0.4)',
+        success: 'rgba(16, 185, 129, 0.4)',
     };
 
     return (
@@ -65,15 +65,15 @@ export function GlassCard({
 
 const styles = StyleSheet.create({
     card: {
-        padding: 16,
+        padding: 18,
         borderWidth: 1,
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
-            height: 4,
+            height: 8,
         },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 5,
+        shadowOpacity: 0.15,
+        shadowRadius: 24,
+        elevation: 10,
     }
 });

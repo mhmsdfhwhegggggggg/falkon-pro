@@ -28,8 +28,7 @@ async function setupLicense() {
             licenseKey,
             type: "premium",
             maxAccounts: 10,
-            maxMessagesPerAccount: 5000,
-            durationDays: 30,
+            maxMessages: 5000,
             status: "active",
             activatedAt: new Date(),
             expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days

@@ -1,7 +1,10 @@
-import { ScrollView, View, Text, Pressable, TextInput, ActivityIndicator, Switch, Alert } from "react-native";
+import { ScrollView, View, Text, Pressable, TextInput, ActivityIndicator, Switch, Alert, TouchableOpacity } from "react-native";
 import { useState, useEffect } from "react";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
+import { GlassCard } from "@/components/ui/glass-card";
 import { trpc } from "@/lib/trpc";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 
@@ -22,12 +25,15 @@ export default function BulkOpsScreen() {
   const [delayMs, setDelayMs] = useState("2000");
   const [autoRepeat, setAutoRepeat] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [targetGroupId, setTargetGroupId] = useState("");
 
   // Fetch accounts for selection
   const { data: accounts, isLoading: loadingAccounts } = trpc.accounts.getAll.useQuery(undefined) as any;
 
   // API Mutations
   const startBulkMutation = trpc.bulkOps.startSendBulkMessages.useMutation();
+  const startAddUsersMutation = trpc.bulkOps.startAddUsersToGroup.useMutation();
 
   const jobStatusQuery = trpc.bulkOps.getJobStatus.useQuery(
     { jobId: jobId || "" },
@@ -63,8 +69,52 @@ export default function BulkOpsScreen() {
           Alert.alert("خطأ", error.message || "فشل بدء العملية");
         },
       });
+    } else if (operationType === "add-users") {
+      if (!targetGroupId.trim()) return Alert.alert("تنبيه", "يرجى إدخال الجروب الهدف");
+      startAddUsersMutation.mutate({
+        accountId: selectedAccountId,
+        groupId: targetGroupId.trim(),
+        userIds: targets,
+        delayMs: parseInt(delayMs) || 1000,
+      }, {
+        onSuccess: (data: any) => {
+          setJobId(data.jobId);
+          Alert.alert("تم البدء", "تم إنشاء مهمة الإضافة وإدراجها في طابور السيرفر");
+        },
+        onError: (error: any) => {
+          Alert.alert("خطأ", error.message || "فشل بدء عملية الإضافة");
+        },
+      });
     } else {
       Alert.alert("قيد التطوير", "سيتم تفعيل هذا النوع من العمليات في التحديث القادم");
+    }
+  };
+
+  const handleImport = async () => {
+    try {
+      setIsImporting(true);
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/plain', 'text/csv', '*/*'],
+        copyToCacheDirectory: true,
+      });
+      
+      if (result.canceled || !result.assets || result.assets.length === 0) return;
+      
+      const fileUri = result.assets[0].uri;
+      const fileContent = await (FileSystem as any).readAsStringAsync(fileUri, { encoding: "utf8" });
+      
+      const lines = fileContent.split(/\r?\n/).map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+      
+      if (lines.length > 0) {
+        setTargetList(prev => prev ? prev + '\n' + lines.join('\n') : lines.join('\n'));
+        Alert.alert("نجاح", `تم استيراد ${lines.length} هدف بنجاح`);
+      } else {
+        Alert.alert("تنبيه", "الملف فارغ أو لا يحتوي على نصوص صالحة");
+      }
+    } catch (error: any) {
+      Alert.alert("خطأ", "فشل استيراد الملف: " + error.message);
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -81,7 +131,7 @@ export default function BulkOpsScreen() {
           </View>
 
           {/* Account Selection */}
-          <View className="gap-3 bg-surface rounded-2xl p-4 border border-border">
+          <GlassCard delay={100} className="p-4 gap-3">
             <Text className="text-sm font-semibold text-foreground">حساب التنفيذ</Text>
             {loadingAccounts ? (
               <ActivityIndicator color={colors.primary} />
@@ -91,7 +141,7 @@ export default function BulkOpsScreen() {
                   <Pressable
                     key={account.id}
                     onPress={() => setSelectedAccountId(account.id)}
-                    className={`px-4 py-2 rounded-xl border ${selectedAccountId === account.id ? 'border-primary bg-primary/10' : 'border-border bg-background'}`}
+                    className={`px-4 py-2 rounded-xl border ${selectedAccountId === account.id ? 'border-primary bg-primary/20' : 'border-border bg-background/50'}`}
                   >
                     <Text style={{ color: selectedAccountId === account.id ? colors.primary : colors.foreground, fontWeight: selectedAccountId === account.id ? 'bold' : 'normal' }}>
                       {account.phoneNumber}
@@ -100,7 +150,7 @@ export default function BulkOpsScreen() {
                 ))}
               </ScrollView>
             )}
-          </View>
+          </GlassCard>
 
           {/* Operation Type Selector */}
           <View className="flex-row gap-2">
@@ -121,12 +171,26 @@ export default function BulkOpsScreen() {
           </View>
 
           {/* Configuration Section */}
-          <View className="bg-surface rounded-2xl p-4 gap-4 border border-border">
+          <GlassCard delay={200} className="p-4 gap-4">
             <Text className="text-sm font-semibold text-foreground">إعدادات العملية</Text>
 
             {/* Target List */}
             <View className="gap-2">
-              <Text className="text-xs text-muted">قائمة الأهداف (يوزر نيم أو ID - واحد في كل سطر)</Text>
+              <View className="flex-row items-center justify-between">
+                <Text className="text-xs text-muted">قائمة الأهداف (يوزر نيم أو ID)</Text>
+                <TouchableOpacity
+                  onPress={handleImport}
+                  disabled={isImporting}
+                  className="flex-row items-center gap-1 bg-primary/10 px-2 py-1 rounded-lg"
+                >
+                  {isImporting ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <IconSymbol name="plus.rectangle.on.folder.fill" size={14} color={colors.primary} />
+                  )}
+                  <Text className="text-xs font-bold text-primary">استيراد من ملف</Text>
+                </TouchableOpacity>
+              </View>
               <TextInput
                 multiline
                 numberOfLines={5}
@@ -159,6 +223,26 @@ export default function BulkOpsScreen() {
               </View>
             )}
 
+            {/* Target Group ID (Add Users mode) */}
+            {operationType === "add-users" && (
+              <View className="gap-2">
+                <Text className="text-xs text-muted">الجروب الهدف (أين تريد إضافة الأعضاء؟)</Text>
+                <TextInput
+                  placeholder="رابط الجروب أو @username"
+                  value={targetGroupId}
+                  onChangeText={setTargetGroupId}
+                  className="bg-background border border-border rounded-xl p-3 text-foreground"
+                  placeholderTextColor={colors.muted}
+                  autoCapitalize="none"
+                />
+                <View className="bg-primary/5 rounded-lg p-2 mt-1">
+                  <Text className="text-[10px] text-primary">
+                    💡 تأكد من أن الحساب لديه صلاحية الإضافة أو أن الجروب مفتوح للإضافات.
+                  </Text>
+                </View>
+              </View>
+            )}
+
             {/* Delay & Options */}
             <View className="flex-row gap-4">
               <View className="flex-1 gap-2">
@@ -175,7 +259,7 @@ export default function BulkOpsScreen() {
                 <Switch value={autoRepeat} onValueChange={setAutoRepeat} trackColor={{ true: colors.primary }} />
               </View>
             </View>
-          </View>
+          </GlassCard>
 
           {/* Progress Section */}
           {jobId && jobStatusQuery.data?.found && (
@@ -210,17 +294,17 @@ export default function BulkOpsScreen() {
           {/* Action Button */}
           <Pressable
             onPress={handleStart}
-            disabled={isRunning || startBulkMutation.isPending}
-            className={`py-4 rounded-2xl items-center shadow-sm ${isRunning || startBulkMutation.isPending ? 'bg-muted' : 'bg-primary'}`}
+            disabled={isRunning || startBulkMutation.isPending || startAddUsersMutation.isPending}
+            className={`py-4 rounded-2xl items-center shadow-sm ${isRunning || startBulkMutation.isPending || startAddUsersMutation.isPending ? 'bg-muted' : 'bg-primary'}`}
           >
             <View className="flex-row items-center gap-2">
-              {isRunning || startBulkMutation.isPending ? (
+              {isRunning || startBulkMutation.isPending || startAddUsersMutation.isPending ? (
                 <ActivityIndicator color="white" />
               ) : (
                 <IconSymbol name="play.fill" size={20} color="white" />
               )}
               <Text className="text-white font-bold text-lg">
-                {isRunning ? "جاري التنفيذ في السيرفر..." : "بدء العملية الجماعية"}
+                {isRunning ? "جاري التنفيذ في السيرفر..." : operationType === 'add-users' ? "بدء الإضافة الجماعية" : "بدء العملية الجماعية"}
               </Text>
             </View>
           </Pressable>

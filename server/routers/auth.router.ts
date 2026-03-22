@@ -80,4 +80,9 @@ export const authRouter = router({
         .mutation(async () => {
             return { success: true };
         }),
+
+    isAdmin: publicProcedure
+        .query(({ ctx }) => {
+            return ctx.user?.role === "admin";
+        }),
 });

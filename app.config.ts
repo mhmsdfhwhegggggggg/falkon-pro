@@ -1,6 +1,5 @@
 // Removed manual load-env.js import as Expo builder handles envs natively.
 import type { ExpoConfig } from "expo/config";
-import type { ExpoConfig } from "expo/config";
 
 // Bundle ID format: space.manus.<project_name_dots>.<timestamp>
 // e.g., "my-app" created at 2024-01-15 10:30:45 -> "space.manus.my.app.t20240115103045"
@@ -28,8 +27,8 @@ const schemeFromBundleId = `manus${timestamp}`;
 
 const env = {
   // App branding - update these values directly (do not use env vars)
-  appName: "FALCON Telegram Pro",
-  appSlug: "falcon-telegram-pro-mobile",
+  appName: "FALKON PRO",
+  appSlug: "falcon-pro-mobile",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
   logoUrl: "",

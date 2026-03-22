@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { GlassCard } from "@/components/ui/glass-card";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "expo-router";
 
@@ -106,7 +107,7 @@ export default function HomeScreen() {
               {/* Stats Grid */}
               <View className="flex-row flex-wrap gap-3">
                 {/* Total Accounts */}
-                <View className="flex-1 min-w-[45%] bg-surface rounded-2xl p-4 border border-border">
+                <GlassCard className="flex-1 min-w-[45%]" delay={100}>
                   <View className="flex-row items-center gap-2 mb-2">
                     <View className="w-8 h-8 rounded-full items-center justify-center bg-primary/10">
                       <IconSymbol name="person.2.fill" size={16} color={colors.primary} />
@@ -116,12 +117,12 @@ export default function HomeScreen() {
                   <Text className="text-2xl font-bold text-foreground">
                     {stats.totalAccounts}
                   </Text>
-                </View>
+                </GlassCard>
 
                 {/* Active Accounts */}
-                <View className="flex-1 min-w-[45%] bg-surface rounded-2xl p-4 border border-border">
+                <GlassCard className="flex-1 min-w-[45%]" delay={200} variant="success">
                   <View className="flex-row items-center gap-2 mb-2">
-                    <View className="w-8 h-8 rounded-full items-center justify-center bg-success/10">
+                    <View className="w-8 h-8 rounded-full items-center justify-center bg-success/20">
                       <IconSymbol name="checkmark.circle.fill" size={16} color={colors.success} />
                     </View>
                     <Text className="text-xs text-muted">نشطة</Text>
@@ -129,12 +130,12 @@ export default function HomeScreen() {
                   <Text className="text-2xl font-bold text-success">
                     {stats.activeAccounts}
                   </Text>
-                </View>
+                </GlassCard>
 
                 {/* Members Extracted */}
-                <View className="flex-1 min-w-[45%] bg-surface rounded-2xl p-4 border border-border">
+                <GlassCard className="flex-1 min-w-[45%]" delay={300} variant="neon">
                   <View className="flex-row items-center gap-2 mb-2">
-                    <View className="w-8 h-8 rounded-full items-center justify-center bg-warning/10">
+                    <View className="w-8 h-8 rounded-full items-center justify-center bg-warning/20">
                       <IconSymbol name="arrow.down.doc.fill" size={16} color={colors.warning} />
                     </View>
                     <Text className="text-xs text-muted">مستخرجين</Text>
@@ -142,12 +143,12 @@ export default function HomeScreen() {
                   <Text className="text-2xl font-bold text-foreground">
                     {stats.membersExtracted > 1000 ? `${(stats.membersExtracted / 1000).toFixed(1)}K` : stats.membersExtracted}
                   </Text>
-                </View>
+                </GlassCard>
 
                 {/* Messages Today */}
-                <View className="flex-1 min-w-[45%] bg-surface rounded-2xl p-4 border border-border">
+                <GlassCard className="flex-1 min-w-[45%]" delay={400}>
                   <View className="flex-row items-center gap-2 mb-2">
-                    <View className="w-8 h-8 rounded-full items-center justify-center bg-error/10">
+                    <View className="w-8 h-8 rounded-full items-center justify-center bg-error/20">
                       <IconSymbol name="paperplane.fill" size={16} color={colors.error} />
                     </View>
                     <Text className="text-xs text-muted">رسائل اليوم</Text>
@@ -155,7 +156,7 @@ export default function HomeScreen() {
                   <Text className="text-2xl font-bold text-foreground">
                     {stats.messagesToday}
                   </Text>
-                </View>
+                </GlassCard>
               </View>
             </View>
           )}
@@ -212,12 +213,12 @@ export default function HomeScreen() {
               النشاطات الأخيرة
             </Text>
 
-            <View className="bg-surface rounded-2xl border border-border overflow-hidden">
+            <GlassCard delay={500} className="p-0">
               {activitiesData && activitiesData.length > 0 ? (
                 (activitiesData as any[]).map((activity: any, index: number) => (
                   <View
                     key={index}
-                    className={`p-4 flex-row items-center justify-between ${index < activitiesData.length - 1 ? "border-b border-border" : ""
+                    className={`p-4 flex-row items-center justify-between ${index < activitiesData.length - 1 ? "border-b border-border/50" : ""
                       }`}
                   >
                     <View className="flex-1">
@@ -229,12 +230,13 @@ export default function HomeScreen() {
                       </Text>
                     </View>
                     <View
-                      className="w-3 h-3 rounded-full"
+                      className="w-3 h-3 rounded-full shadow-sm"
                       style={{
                         backgroundColor:
                           activity.status === "success"
                             ? colors.success
                             : colors.error,
+                        shadowColor: activity.status === "success" ? colors.success : colors.error,
                       }}
                     />
                   </View>
@@ -244,7 +246,7 @@ export default function HomeScreen() {
                   <Text className="text-muted">لا توجد نشاطات مؤخراً</Text>
                 </View>
               )}
-            </View>
+            </GlassCard>
           </View>
 
           {/* System Status */}

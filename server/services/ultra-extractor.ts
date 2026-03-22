@@ -205,7 +205,7 @@ export class UltraExtractor {
          return [];
       }
 
-      const messages = history.messages as Api.Message[];
+      const messages = (history as any).messages as Api.Message[];
       
       for (const msg of messages) {
         if (users.size >= limit) break;

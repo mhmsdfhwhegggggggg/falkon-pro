@@ -14,17 +14,17 @@ export function Badge({ children, variant = 'primary', className = '' }: BadgePr
     const getVariantStyles = () => {
         switch (variant) {
             case 'success':
-                return { bg: colors.success + '20', text: colors.success };
+                return { bg: colors.success + '15', border: colors.success + '40', text: colors.success };
             case 'warning':
-                return { bg: colors.warning + '20', text: colors.warning };
+                return { bg: colors.warning + '15', border: colors.warning + '40', text: colors.warning };
             case 'error':
-                return { bg: colors.error + '20', text: colors.error };
+                return { bg: colors.error + '15', border: colors.error + '40', text: colors.error };
             case 'info':
-                return { bg: colors.info + '20', text: colors.info };
+                return { bg: colors.info + '15', border: colors.info + '40', text: colors.info };
             case 'muted':
-                return { bg: colors.muted + '20', text: colors.muted };
+                return { bg: colors.muted + '15', border: colors.muted + '40', text: colors.muted };
             default:
-                return { bg: colors.primary + '20', text: colors.primary };
+                return { bg: colors.primary + '15', border: colors.primary + '40', text: colors.primary };
         }
     };
 
@@ -32,8 +32,8 @@ export function Badge({ children, variant = 'primary', className = '' }: BadgePr
 
     return (
         <View
-            className={`px-2 py-0.5 rounded-lg ${className}`}
-            style={{ backgroundColor: styles.bg }}
+            className={`px-2 py-1 rounded-lg border flex-row items-center justify-center ${className}`}
+            style={{ backgroundColor: styles.bg, borderColor: styles.border }}
         >
             <Text
                 className="text-[10px] font-bold"

@@ -32,7 +32,7 @@ const stringSession = new StringSession(authData.sessionString);
         
         console.log("Successfully logged in!");
         const finalSession = client.session.save();
-        fs.writeFileSync("final-session.txt", finalSession as string);
+        fs.writeFileSync("final-session.txt", finalSession as unknown as string);
         process.exit(0);
     } catch (e: any) {
         if (e.errorMessage === "SESSION_PASSWORD_NEEDED") {
@@ -48,7 +48,7 @@ const stringSession = new StringSession(authData.sessionString);
                 
                 console.log("Successfully logged in with 2FA password!");
                 const finalSession = client.session.save();
-                fs.writeFileSync("final-session.txt", finalSession as string);
+                fs.writeFileSync("final-session.txt", finalSession as unknown as string);
                 process.exit(0);
             } catch (pwdError) {
                 console.error("Failed to verify 2FA password:", pwdError);

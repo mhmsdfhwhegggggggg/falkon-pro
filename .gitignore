@@ -94,4 +94,8 @@ expo-env.d.ts
 # @end expo-cli
 auth.json
 final-session.txt
+.secrets.json
+*.txt
+ts_errors.txt
+
 

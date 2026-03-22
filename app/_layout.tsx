@@ -24,7 +24,7 @@ const DEFAULT_WEB_INSETS: any = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: any = { x: 0, y: 0, width: 0, height: 0 };
 
 export const unstable_settings = {
-  anchor: "(tabs)",
+  anchor: "(drawer)",
 };
 
 export default function RootLayout() {
@@ -85,7 +85,7 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <LicenseGuard>
             <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(drawer)" />
               <Stack.Screen name="oauth/callback" />
               <Stack.Screen name="license-activation" />
             </Stack>

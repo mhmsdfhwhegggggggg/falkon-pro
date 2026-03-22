@@ -7,10 +7,8 @@ import { bulkOpsRouter } from "./routers/bulk-ops.router";
 import { statsRouter } from "./routers/stats.router";
 import { proxiesRouter } from "./routers/proxies.router";
 import { dashboardRouter } from "./routers/dashboard.router";
-import { setupRouter } from "./routers/setup.router";
 import { antiBanRouter } from "./routers/anti-ban";
 import { licenseRouter } from "./routers/license";
-import { permissionRouter } from "./routers/permission.router";
 import { extractAddRouter } from "./routers/extract-add.router";
 import { channelManagementRouter } from "./routers/channel-management.router";
 import { autoReplyRouter } from "./routers/auto-reply.router";
@@ -40,12 +38,10 @@ export const appRouter = router({
   stats: statsRouter,
   proxies: proxiesRouter,
   dashboard: dashboardRouter,
-  setup: setupRouter,
 
   // Advanced Features
   antiBan: antiBanRouter,
   license: licenseRouter,
-  permission: permissionRouter,
   extractAdd: extractAddRouter,
   channelManagement: channelManagementRouter,
   autoReply: autoReplyRouter,

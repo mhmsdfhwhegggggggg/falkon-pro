@@ -30,7 +30,7 @@ export default function LicenseActivationScreen() {
 
       if (result.success) {
         Alert.alert('تم التفعيل', 'تم تفعيل البرنامج بنجاح على هذا الجهاز');
-        router.replace('/(tabs)');
+        router.replace('/(drawer)');
       } else {
         Alert.alert('فشل التفعيل', result.message || 'المفتاح غير صالح أو مرتبط بجهاز آخر');
       }

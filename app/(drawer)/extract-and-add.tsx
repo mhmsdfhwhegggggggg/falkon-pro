@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
+import { GlassCard } from "@/components/ui/glass-card";
 import { trpc } from '@/lib/trpc';
 import { IconSymbol } from "@/components/ui/icon-symbol";
 
@@ -124,7 +125,7 @@ export default function ExtractAndAddScreen() {
           </View>
 
           {/* Account Selection */}
-          <View className="gap-3 bg-surface rounded-2xl p-4 border border-border">
+          <GlassCard delay={100} className="p-4 gap-3">
             <Text className="text-sm font-semibold text-foreground">حساب التنفيذ</Text>
             {loadingAccounts ? (
               <ActivityIndicator color={colors.primary} />
@@ -134,7 +135,7 @@ export default function ExtractAndAddScreen() {
                   <TouchableOpacity
                     key={account.id}
                     onPress={() => setAccountId(account.id)}
-                    className={`px-4 py-2 rounded-xl border ${accountId === account.id ? 'border-primary bg-primary/10' : 'border-border bg-background'}`}
+                    className={`px-4 py-2 rounded-xl border ${accountId === account.id ? 'border-primary bg-primary/20' : 'border-border bg-background/50'}`}
                   >
                     <Text style={{ color: accountId === account.id ? colors.primary : colors.foreground, fontWeight: accountId === account.id ? 'bold' : 'normal' }}>
                       {account.phoneNumber}
@@ -143,17 +144,17 @@ export default function ExtractAndAddScreen() {
                 ))}
               </ScrollView>
             )}
-          </View>
+          </GlassCard>
 
           {/* Source & Target */}
-          <View className="gap-4 bg-surface rounded-2xl p-4 border border-border">
+          <GlassCard delay={200} className="p-4 gap-4">
             <View className="gap-2">
               <Text className="text-sm font-semibold text-foreground">المصدر (استخراج من)</Text>
               <TextInput
                 placeholder="رابط الجروب أو @username"
                 value={source}
                 onChangeText={setSource}
-                className="bg-background border border-border rounded-xl p-3 text-foreground"
+                className="bg-background/80 border border-border rounded-xl p-3 text-foreground"
                 placeholderTextColor={colors.muted}
                 autoCapitalize="none"
               />
@@ -164,15 +165,15 @@ export default function ExtractAndAddScreen() {
                 placeholder="رابط الجروب أو @username"
                 value={target}
                 onChangeText={setTarget}
-                className="bg-background border border-border rounded-xl p-3 text-foreground"
+                className="bg-background/80 border border-border rounded-xl p-3 text-foreground"
                 placeholderTextColor={colors.muted}
                 autoCapitalize="none"
               />
             </View>
-          </View>
+          </GlassCard>
 
           {/* Advanced Filters */}
-          <View className="gap-4 bg-surface rounded-2xl p-4 border border-border">
+          <GlassCard delay={300} className="p-4 gap-4">
             <Text className="text-sm font-semibold text-foreground">فلاتر ذكية</Text>
 
             <View className="flex-row gap-2">
@@ -180,7 +181,7 @@ export default function ExtractAndAddScreen() {
                 <TouchableOpacity
                   key={mode}
                   onPress={() => setExtractMode(mode)}
-                  className={`flex-1 py-2 rounded-lg items-center ${extractMode === mode ? 'bg-primary' : 'bg-background border border-border'}`}
+                  className={`flex-1 py-2 rounded-lg items-center ${extractMode === mode ? 'bg-primary' : 'bg-background/50 border border-border'}`}
                 >
                   <Text className={extractMode === mode ? 'text-white font-bold' : 'text-muted'}>
                     {mode === 'all' ? 'الكل' : mode === 'engaged' ? 'المتفاعلين' : 'الأدمن'}
@@ -190,12 +191,12 @@ export default function ExtractAndAddScreen() {
             </View>
 
             <View className="flex-row items-center justify-between">
-              <Text className="text-foreground">استبعاد البوتات</Text>
+              <Text className="text-foreground text-sm">استبعاد البوتات</Text>
               <Switch value={excludeBots} onValueChange={setExcludeBots} trackColor={{ true: colors.primary }} />
             </View>
 
             <View className="flex-row items-center justify-between">
-              <Text className="text-foreground">يوزر نيم مطلوب</Text>
+              <Text className="text-foreground text-sm">يوزر نيم مطلوب</Text>
               <Switch value={requireUsername} onValueChange={setRequireUsername} trackColor={{ true: colors.primary }} />
             </View>
 
@@ -206,7 +207,7 @@ export default function ExtractAndAddScreen() {
                   value={limit}
                   onChangeText={setLimit}
                   keyboardType="numeric"
-                  className="bg-background border border-border rounded-lg p-2 text-foreground text-center"
+                  className="bg-background/80 border border-border rounded-lg p-2 text-foreground text-center"
                 />
               </View>
               <View className="flex-1 gap-1">
@@ -215,11 +216,11 @@ export default function ExtractAndAddScreen() {
                   value={delayMs}
                   onChangeText={setDelayMs}
                   keyboardType="numeric"
-                  className="bg-background border border-border rounded-lg p-2 text-foreground text-center"
+                  className="bg-background/80 border border-border rounded-lg p-2 text-foreground text-center"
                 />
               </View>
             </View>
-          </View>
+          </GlassCard>
 
           {/* Progress Section */}
           {isRunning && (

@@ -1,14 +1,14 @@
 module.exports = {
   themeColors: {
-    primary: { light: '#7C3AED', dark: '#8B5CF6' }, // Neon Violet
-    background: { light: '#F8FAFC', dark: '#030712' }, // Deepest Black/Gray for dark mode
-    surface: { light: '#FFFFFF', dark: '#111827' }, // Gray-900
-    foreground: { light: '#0F172A', dark: '#F9FAFB' }, // White text
-    muted: { light: '#64748B', dark: '#9CA3AF' }, // Gray-400
-    border: { light: '#E2E8F0', dark: '#1F2937' }, // Gray-800
-    success: { light: '#10B981', dark: '#34D399' }, // Emerald
-    warning: { light: '#F59E0B', dark: '#FBBF24' }, // Amber
-    error: { light: '#EF4444', dark: '#F87171' }, // Red
-    info: { light: '#3B82F6', dark: '#60A5FA' }, // Blue
+    primary: { light: '#6D28D9', dark: '#8B5CF6' }, // Premium Violet
+    background: { light: '#F9FAFB', dark: '#09090B' }, // Deep Zinc-950 for dark mode
+    surface: { light: '#FFFFFF', dark: '#18181B' }, // Elevated Zinc-900
+    foreground: { light: '#09090B', dark: '#FAFAFA' }, // High contrast text
+    muted: { light: '#71717A', dark: '#A1A1AA' }, // Zinc-500 / Zinc-400
+    border: { light: '#E4E4E7', dark: '#27272A' }, // Sharp borders Zinc-200/800
+    success: { light: '#10B981', dark: '#10B981' }, // Emerald
+    warning: { light: '#F59E0B', dark: '#F59E0B' }, // Amber
+    error: { light: '#E11D48', dark: '#F43F5E' }, // Rose / Crimson
+    info: { light: '#3B82F6', dark: '#38BDF8' }, // Light Blue / Cyan
   }
 };
