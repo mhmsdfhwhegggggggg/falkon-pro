@@ -9,7 +9,7 @@ import { contentClonerService } from './content-cloner.service';
 import { logger } from '../_core/logger';
 import * as db from '../db';
 import { eq } from 'drizzle-orm';
-import { hashPassword } from '../_core/crypto';
+import { hashPassword, decryptString } from '../_core/crypto';
 
 export class StartupService {
     /**
@@ -83,7 +83,7 @@ export class StartupService {
                 await telegramClientService.initializeClient(
                     account.id,
                     account.phoneNumber,
-                    account.sessionString
+                    decryptString(account.sessionString)
                 );
                 logger.info(`[Startup] ✅ Connected account ${account.id} (${account.phoneNumber})`);
             } catch (error: any) {
