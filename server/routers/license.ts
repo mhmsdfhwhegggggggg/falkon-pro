@@ -74,14 +74,14 @@ export const licenseRouter = router({
   /**
    * Activate license
    */
-  activateLicense: publicProcedure
+  activateLicense: protectedProcedure
     .input(z.object({
       licenseKey: z.string().min(1),
       hardwareId: z.string().min(1),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       try {
-        const success = await licenseManager.activateLicense(input.licenseKey, input.hardwareId);
+        const success = await licenseManager.activateLicense(input.licenseKey, input.hardwareId, ctx.user.id);
 
         return {
           success,

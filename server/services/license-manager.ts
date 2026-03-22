@@ -120,7 +120,7 @@ export class LicenseManager {
   /**
    * Activate license
    */
-  async activateLicense(key: string, hardwareId?: string): Promise<boolean> {
+  async activateLicense(key: string, hardwareId?: string, userId?: number): Promise<boolean> {
     const license = await db.query.licenses.findFirst({
       where: eq(licenses.licenseKey, key)
     });
@@ -133,13 +133,18 @@ export class LicenseManager {
       return false;
     }
 
-    // Update license
-    await db.update(licenses).set({
+    // Update license and bind it to the activating user
+    const updateData: any = {
       status: 'active',
       activatedAt: new Date(),
       lastValidated: new Date(),
       hardwareId: hardwareId || license.hardwareId
-    }).where(eq(licenses.id, license.id));
+    };
+    if (userId) {
+      updateData.userId = userId;
+    }
+
+    await db.update(licenses).set(updateData).where(eq(licenses.id, license.id));
 
     // Invalidate cache
     this.licenseCache.delete(license.userId);
