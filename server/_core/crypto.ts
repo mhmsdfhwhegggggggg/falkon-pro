@@ -5,7 +5,7 @@ import { Secrets } from "./secrets";
 // Requires SESSION_ENC_KEY (32 bytes in base64 or hex) from environment
 const getKey = (): Buffer => {
   // Prefer persisted secret (auto-generated on first use)
-  const raw = Secrets.getSessionEncKey() || process.env.SESSION_ENC_KEY || "";
+  const raw = (Secrets.getSessionEncKey() || process.env.SESSION_ENC_KEY || "").trim();
   if (!raw) throw new Error("SESSION_ENC_KEY is not set");
 
   // Accept base64 or hex; fallback to utf8 (not recommended) if length >= 32
