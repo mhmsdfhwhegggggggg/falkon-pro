@@ -13,6 +13,7 @@ config.resolver.extraNodeModules = {
   path: require.resolve("path-browserify"),
   os: require.resolve("os-browserify/browser"),
   zlib: require.resolve("browserify-zlib"),
+  constants: require.resolve("constants-browserify"),
   fs: path.resolve(__dirname, "empty-module.js"),
   net: path.resolve(__dirname, "empty-module.js"),
   tls: path.resolve(__dirname, "empty-module.js"),
