@@ -77,22 +77,29 @@ export class StartupService {
 
         const accounts = await database.select().from(db.telegramAccounts).where(eq(db.telegramAccounts.isActive, true));
 
+        let connectedCount = 0;
         for (const account of accounts) {
+            if (!account.sessionString) {
+                logger.info(`[Startup] ⏭️ Skipping account ${account.id} (${account.phoneNumber}) - Zero-Knowledge mode or missing session`);
+                continue;
+            }
+
             try {
-                logger.info(`[Startup] Initializing account ${account.id} (${account.phoneNumber})...`);
+                // logger.info(`[Startup] Initializing account ${account.id} (${account.phoneNumber})...`);
                 await telegramClientService.initializeClient(
                     account.id,
                     account.phoneNumber,
-                    decryptString(account.sessionString || "")
+                    decryptString(account.sessionString)
                 );
+                connectedCount++;
                 logger.info(`[Startup] ✅ Connected account ${account.id} (${account.phoneNumber})`);
             } catch (error: any) {
-                logger.error(`[Startup] ❌ Failed to connect account ${account.id} (${account.phoneNumber}): ${error.message}`);
-                // Continue to next account
+                logger.warn(`[Startup] ⚠️ Skipping account ${account.id} (${account.phoneNumber}): ${error.message}`);
+                // Continue to next account without throwing a fatal server error
             }
         }
 
-        logger.info(`[Startup] Connected ${accounts.length} accounts`);
+        logger.info(`[Startup] Connected ${connectedCount}/${accounts.length} accounts`);
     }
 
     private static async initializeServiceListeners() {
