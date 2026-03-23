@@ -12,7 +12,7 @@
  * @author Dragon Team
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -28,10 +28,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { trpc } from "@/lib/trpc";
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
-const trpcAny = trpc as any;
 import { ScreenContainer } from '@/components/screen-container';
 import { useColors } from '@/hooks/use-colors';
-import { router } from 'expo-router';
 
 interface Channel {
   id: string;

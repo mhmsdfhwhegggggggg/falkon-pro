@@ -5,7 +5,6 @@ import { getHardwareId } from '@/lib/hwid';
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useColors } from '@/hooks/use-colors';
 
 export default function LicenseActivationScreen() {
   const [licenseKey, setLicenseKey] = useState('');

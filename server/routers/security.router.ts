@@ -8,7 +8,7 @@ export const securityRouter = router({
         .input(z.object({ key: z.string(), hwid: z.string() }))
         .mutation(async ({ input }) => {
             // Simple mock validation
-            if (!ENV.enableLicenseCheck) return { valid: true, type: "unimited" };
+            if (!ENV.enableLicenseCheck) return { valid: true, type: "unlimited" };
             return { valid: true, type: "trial", expiresAt: new Date(Date.now() + 86400000) };
         }),
 
