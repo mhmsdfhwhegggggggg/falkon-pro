@@ -22,5 +22,6 @@ config.resolver.extraNodeModules = {
 
 module.exports = withNativeWind(config, {
   input: "./global.css",
+  configPath: "./tailwind.config.cjs",
   forceWriteFileSystem: true,
 });

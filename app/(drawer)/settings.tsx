@@ -32,7 +32,7 @@ export default function SettingsScreen() {
         onPress: () => logoutMutation.mutate(undefined, {
           onSuccess: async () => {
             await Auth.clearSession();
-            router.replace("/(auth)/login");
+            router.replace("/license-activation");
           },
           onError: (error: any) => {
             Alert.alert("خطأ", error.message || "فشل تسجيل الخروج");

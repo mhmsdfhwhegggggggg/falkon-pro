@@ -25,7 +25,7 @@ export default function AutoReplyScreen() {
     ) as any);
     const rules = (rulesQuery.data as any)?.success ? (rulesQuery.data as any).data.rules : [];
 
-    const statsQuery = (trpcAny.autoReply.getStats.useQuery(
+    const statsQuery = (trpcAny.autoReply.getReplyStats.useQuery(
         { accountId: selectedAccountId || 0 },
         { enabled: !!selectedAccountId }
     ) as any);

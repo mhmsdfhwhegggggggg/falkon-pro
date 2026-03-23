@@ -77,8 +77,8 @@ export default function ChannelManagementScreen() {
 
   const [newChannel, setNewChannel] = useState({
     title: '',
-    about: '',
-    type: 'channel' as 'channel' | 'group' | 'supergroup',
+    description: '',
+    type: 'channel' as 'channel' | 'group',
     isPrivate: false,
     username: ''
   });
@@ -88,10 +88,10 @@ export default function ChannelManagementScreen() {
   const accounts = accountsQuery.data || [];
   const accountId = accounts?.[0]?.id || 0;
 
-  const userChannelsQuery = (trpc.channelManagement.getUserChannels.useQuery({ accountId: 1 }) as any);
+  const userChannelsQuery = (trpc.channelManagement.getUserChannels.useQuery({ accountId: accountId || 1 }) as any);
   const userChannels = userChannelsQuery.data || [];
 
-  const scheduleQuery = (trpc.channelManagement.getScheduledPosts.useQuery({ accountId: 1 }) as any);
+  const scheduleQuery = (trpc.channelManagement.getScheduledPosts.useQuery({ accountId: accountId || 1 }) as any);
   const scheduledPosts = scheduleQuery.data || [];
 
   const channelStatsQuery = (trpc.channelManagement.getChannelStats.useQuery({
@@ -138,7 +138,7 @@ export default function ChannelManagementScreen() {
           setShowCreateModal(false);
           setNewChannel({
             title: '',
-            about: '',
+            description: '',
             type: 'channel',
             isPrivate: false,
             username: ''
@@ -163,7 +163,7 @@ export default function ChannelManagementScreen() {
 
     try {
       const result = await postContentMutation.mutateAsync({
-        accountId: 1,
+        accountId: accountId || 1,
         channelId: selectedChannel.id,
         content: postContentState
       });
@@ -184,7 +184,7 @@ export default function ChannelManagementScreen() {
   const handleTransferMessages = async (transferData: any) => {
     try {
       const result = await transferMessages.mutateAsync({
-        accountId: 1,
+        accountId: accountId || 1,
         ...transferData
       });
 
@@ -468,8 +468,8 @@ export default function ChannelManagementScreen() {
                   className="text-foreground bg-surface border border-border rounded-lg p-3 h-20"
                   placeholder="أدخل وصف القناة"
                   multiline
-                  value={newChannel.about}
-                  onChangeText={(text) => setNewChannel({ ...newChannel, about: text })}
+                  value={newChannel.description}
+                  onChangeText={(text) => setNewChannel({ ...newChannel, description: text })}
                 />
               </View>
 
