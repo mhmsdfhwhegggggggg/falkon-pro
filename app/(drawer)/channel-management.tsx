@@ -163,7 +163,7 @@ export default function ChannelManagementScreen() {
 
     try {
       const result = await postContentMutation.mutateAsync({
-        accountId: 1,
+        accountId: accountId || 1,
         channelId: selectedChannel.id,
         content: postContentState
       });
@@ -184,7 +184,7 @@ export default function ChannelManagementScreen() {
   const handleTransferMessages = async (transferData: any) => {
     try {
       const result = await transferMessages.mutateAsync({
-        accountId: 1,
+        accountId: accountId || 1,
         ...transferData
       });
 

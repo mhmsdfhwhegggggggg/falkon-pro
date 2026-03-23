@@ -11,7 +11,11 @@ export default function ContentClonerScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<'tasks' | 'logs'>('tasks');
 
-    const { data: tasksData, isLoading, refetch } = (trpc.contentCloner as any).getClonerRules.useQuery({ accountId: 0 });
+    const accountsQuery = (trpc.accounts as any).getAll.useQuery(undefined);
+    const accounts = accountsQuery.data || [];
+    const accountId = accounts?.[0]?.id || 0;
+
+    const { data: tasksData, isLoading, refetch } = (trpc.contentCloner as any).getClonerRules.useQuery({ accountId }, { enabled: !!accountId });
     const tasks = tasksData?.data?.rules || [];
 
     const onRefresh = async () => {
