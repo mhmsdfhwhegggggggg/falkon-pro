@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { trpc } from '@/lib/trpc';
 import { getHardwareId } from '@/lib/hwid';
 import { router } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
+import { useColors } from '@/hooks/use-colors';
 
 export default function LicenseActivationScreen() {
   const [licenseKey, setLicenseKey] = useState('');
@@ -11,9 +13,16 @@ export default function LicenseActivationScreen() {
 
   const activateMutation = trpc.license.activateLicense.useMutation();
 
+  const colors = useColors();
+
   useEffect(() => {
     getHardwareId().then(setHwid);
   }, []);
+
+  const copyToClipboard = async () => {
+    await Clipboard.setStringAsync(hwid);
+    Alert.alert('تم النسخ', 'تم نسخ معرف الجهاز إلى الحافظة');
+  };
 
   const handleActivate = async () => {
     if (!licenseKey.trim()) {
@@ -60,8 +69,18 @@ export default function LicenseActivationScreen() {
         </View>
 
         <View style={styles.infoContainer}>
-            <Text style={styles.infoLabel}>معرف الجهاز (HWID):</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <TouchableOpacity onPress={copyToClipboard} style={styles.copyBadge}>
+                <Text style={styles.copyBadgeText}>نسخ ID الجهاز</Text>
+              </TouchableOpacity>
+              <Text style={styles.infoLabel}>معرف الجهاز (HWID):</Text>
+            </View>
             <Text style={styles.hwidText} numberOfLines={1}>{hwid || 'جاري التحميل...'}</Text>
+        </View>
+
+        <View style={styles.supportHint}>
+          <Text style={styles.supportText}>هل تواجه مشكلة؟ تواصل مع الدعم الفني</Text>
+          <Text style={styles.supportLink}>@falkon_support_bot</Text>
         </View>
 
         <TouchableOpacity 
@@ -172,5 +191,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     marginTop: 20,
+  },
+  copyBadge: {
+    backgroundColor: '#007AFF20',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#007AFF40',
+  },
+  copyBadgeText: {
+    color: '#007AFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  supportHint: {
+    marginTop: 24,
+    marginBottom: 24,
+    alignItems: 'center',
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#222',
+    borderRadius: 16,
+    backgroundColor: '#0a0a0a',
+  },
+  supportText: {
+    color: '#666',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  supportLink: {
+    color: '#007AFF',
+    fontSize: 14,
+    fontWeight: 'bold',
   }
 });

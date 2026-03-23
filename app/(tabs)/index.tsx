@@ -20,12 +20,15 @@ export default function HomeScreen() {
   // Fetch dashboard stats from API
   const { data: statsData, isLoading, refetch: refetchStats } = trpc.dashboard.getStats.useQuery(undefined);
   const { data: activitiesData, refetch: refetchActivities } = trpc.dashboard.getRecentActivities.useQuery(undefined);
+  const { data: licenseData, refetch: refetchLicense } = trpc.license.getUserLicenses.useQuery({});
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetchStats(), refetchActivities()]);
+    await Promise.all([refetchStats(), refetchActivities(), refetchLicense()]);
     setRefreshing(false);
-  }, [refetchStats, refetchActivities]);
+  }, [refetchStats, refetchActivities, refetchLicense]);
+
+  const activeLicense = licenseData?.licenses?.find((l: any) => l.status === 'active');
 
   const stats = statsData || {
     totalAccounts: 0,
@@ -90,6 +93,37 @@ export default function HomeScreen() {
               source={require("@/assets/images/icon.png")}
               style={{ width: 60, height: 60, borderRadius: 15 }}
             />
+          </View>
+
+          {/* Membership Card */}
+          <View className="bg-surface rounded-3xl p-6 border border-border shadow-sm overflow-hidden">
+            <View className="flex-row items-center justify-between mb-4">
+              <View>
+                <Text className="text-muted text-xs uppercase tracking-widest font-bold">حالة الاشتراك</Text>
+                <Text className="text-foreground text-xl font-bold mt-1">
+                  {activeLicense ? (activeLicense.type === 'premium' ? 'نسخة بريميوم ✨' : 'نسخة مفعلة ✅') : 'لا يوجد ترخيص نشط ❌'}
+                </Text>
+              </View>
+              <View className="bg-primary/20 p-2 rounded-xl">
+                <IconSymbol name="shield.fill" size={24} color={colors.primary} />
+              </View>
+            </View>
+            
+            <View className="h-0.5 bg-border/50 w-full mb-4" />
+            
+            <View className="flex-row justify-between items-center">
+              <View>
+                <Text className="text-muted text-xs mb-1">تاريخ الانتهاء</Text>
+                <Text className="text-foreground font-medium">
+                  {activeLicense?.expiresAt ? new Date(activeLicense.expiresAt).toLocaleDateString('ar-SA') : '---'}
+                </Text>
+              </View>
+              {activeLicense && (
+                <View className="bg-success/20 px-3 py-1 rounded-full border border-success/30">
+                  <Text className="text-success text-xs font-bold">عضوية نشطة</Text>
+                </View>
+              )}
+            </View>
           </View>
 
           {/* Statistics Section */}

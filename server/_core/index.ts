@@ -48,20 +48,31 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  // Enable CORS with allowlist; reflect origin only in development if no list provided
+  // Enable CORS with allowlist
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     const list = ENV.corsOrigins;
+    const publicUrl = process.env.PUBLIC_URL || "";
+
     if (origin) {
-      const allowed = list.length > 0 ? list.includes(origin) : !ENV.isProduction;
-      if (allowed) {
+      // Allow if in list, is the public URL, or if in development
+      const isAllowed = 
+        list.includes(origin) || 
+        (publicUrl && origin.includes(new URL(publicUrl).hostname)) ||
+        (!ENV.isProduction);
+
+      if (isAllowed) {
         res.header("Access-Control-Allow-Origin", origin);
       }
+    } else if (!ENV.isProduction) {
+      // Fallback for non-origin requests in dev
+      res.header("Access-Control-Allow-Origin", "*");
     }
+
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header(
       "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-hwid",
     );
     res.header("Access-Control-Allow-Credentials", "true");
 

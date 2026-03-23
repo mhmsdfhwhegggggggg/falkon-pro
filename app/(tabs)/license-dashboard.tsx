@@ -16,8 +16,9 @@ const trpcAny = trpc as any;
  * - Hardware binding
  */
 export default function LicenseDashboardScreen() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'licenses' | 'subscriptions' | 'analytics'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'licenses' | 'subscriptions' | 'analytics'>('overview');
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newLicenseForm, setNewLicenseForm] = useState({
     userId: '',
     type: 'basic',
@@ -29,8 +30,13 @@ export default function LicenseDashboardScreen() {
 
   // tRPC queries
   const { data: analytics, refetch: refetchAnalytics } = trpcAny.license.getAnalytics.useQuery(undefined);
-  const { data: userLicenses, refetch: refetchLicenses } = trpcAny.license.getUserLicenses.useQuery(undefined);
+  const { data: userLicenses, refetch: refetchLicenses } = trpcAny.license.getAllLicenses.useQuery(undefined);
+  const { data: usersData, refetch: refetchUsers } = trpcAny.license.listUsers.useQuery({ search: searchQuery });
   const { data: hardwareId } = trpcAny.license.generateHardwareId.useQuery(undefined);
+
+  // tRPC mutations
+  const resetHardwareId = trpcAny.license.resetHardwareId.useMutation();
+  const extendLicense = trpcAny.license.extendLicense.useMutation();
 
   // tRPC mutations
   const generateLicense = trpcAny.license.generateLicense.useMutation();
@@ -85,33 +91,38 @@ export default function LicenseDashboardScreen() {
     });
   };
 
-  const handleValidateLicense = (licenseKey: string) => {
-    validateLicense.mutate({
-      licenseKey,
-      hardwareId: hardwareId?.hardwareId,
-    }, {
-      onSuccess: (result: any) => {
-        if (result.success) {
-          const { valid, errors, warnings, remainingDays, usageRemaining } = result.validation;
-
-          if (valid) {
-            let message = 'الترخيص صالح ✅';
-            if (remainingDays) message += `\nالأيام المتبقية: ${remainingDays}`;
-            if (usageRemaining !== undefined) message += `\nالاستخدام المتبقي: ${usageRemaining}`;
-            if (warnings.length > 0) message += `\nتحذيرات: ${warnings.join(', ')}`;
-
-            Alert.alert('نجاح', message);
-          } else {
-            Alert.alert('خطأ', `الترخيص غير صالح: ${errors.join(', ')}`);
+  const handleResetHWID = (licenseKey: string) => {
+    Alert.alert(
+      'تأكيد',
+      'هل أنت متأكد من تصفير معرف الجهاز؟ سيسمح هذا للمستخدم بتفعيل الترخيص على جهاز جديد.',
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        { 
+          text: 'تصفير', 
+          style: 'destructive',
+          onPress: () => {
+            resetHardwareId.mutate({ licenseKey }, {
+              onSuccess: () => {
+                Alert.alert('نجاح', 'تم تصفير معرف الجهاز بنجاح');
+                refreshData();
+              }
+            });
           }
-        } else {
-          Alert.alert('خطأ', result.error || 'فشل التحقق من الترخيص');
         }
-      },
-      onError: () => {
-        Alert.alert('خطأ', 'حدث خطأ أثناء التحقق من الترخيص');
-      }
-    });
+      ]
+    );
+  };
+
+  const handleExtendLicense = (licenseKey: string) => {
+    Alert.alert(
+      'تمديد الترخيص',
+      'كم عدد الأيام التي تريد إضافتها؟',
+      [
+        { text: '30 يوم', onPress: () => extendLicense.mutate({ licenseKey, days: 30 }, { onSuccess: refreshData }) },
+        { text: '90 يوم', onPress: () => extendLicense.mutate({ licenseKey, days: 90 }, { onSuccess: refreshData }) },
+        { text: 'إلغاء', style: 'cancel' }
+      ]
+    );
   };
 
   const getStatusColor = (status: string) => {
@@ -134,43 +145,36 @@ export default function LicenseDashboardScreen() {
     }
   };
 
-  const renderOverview = () => (
+  const renderUsers = () => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>📊 نظرة عامة</Text>
+      <Text style={styles.sectionTitle}>👥 إدارة المستخدمين</Text>
+      
+      <TextInput
+        style={styles.searchBar}
+        placeholder="ابحث عن مستخدم (البريد أو الاسم)..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
 
-      <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{analytics?.analytics?.totalLicenses || 0}</Text>
-          <Text style={styles.statLabel}>إجمالي التراخيص</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{analytics?.analytics?.activeLicenses || 0}</Text>
-          <Text style={styles.statLabel}>التراخيص النشطة</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>${analytics?.analytics?.totalRevenue || 0}</Text>
-          <Text style={styles.statLabel}>إجمالي الإيرادات</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{analytics?.analytics?.expiringSoon || 0}</Text>
-          <Text style={styles.statLabel}>تنتهي قريباً</Text>
-        </View>
-      </View>
-
-      <View style={styles.hardwareSection}>
-        <Text style={styles.hardwareTitle}>🔐 معرف الجهاز</Text>
-        <Text style={styles.hardwareId}>{hardwareId?.hardwareId || 'Loading...'}</Text>
-        <TouchableOpacity style={styles.copyButton} onPress={() => {
-          if (hardwareId?.hardwareId) {
-            Alert.alert('تم النسخ', 'تم نسخ معرف الجهاز');
-          }
-        }}>
-          <Text style={styles.copyButtonText}>نسخ</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView style={styles.userList}>
+        {usersData?.users?.map((user: any) => (
+          <View key={user.id} style={styles.userCard}>
+            <View>
+              <Text style={styles.userName}>{user.username || 'بدون اسم'}</Text>
+              <Text style={styles.userEmail}>{user.email}</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.selectUserButton}
+              onPress={() => {
+                setNewLicenseForm({ ...newLicenseForm, userId: String(user.id) });
+                setActiveTab('licenses');
+              }}
+            >
+              <Text style={styles.selectUserButtonText}>منح ترخيص</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 
@@ -287,17 +291,17 @@ export default function LicenseDashboardScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => {
-                  if (hardwareId?.hardwareId) {
-                    activateLicense.mutate({
-                      licenseKey: license.licenseKey,
-                      hardwareId: hardwareId.hardwareId,
-                    });
-                  }
-                }}
+                style={[styles.actionButton, { backgroundColor: '#f59e0b' }]}
+                onPress={() => handleResetHWID(license.licenseKey)}
               >
-                <Text style={styles.actionButtonText}>تفعيل</Text>
+                <Text style={styles.actionButtonText}>تصفير HWID</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#10b981' }]}
+                onPress={() => handleExtendLicense(license.licenseKey)}
+              >
+                <Text style={styles.actionButtonText}>تمديد</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -388,6 +392,7 @@ export default function LicenseDashboardScreen() {
       <View style={styles.tabSelector}>
         {[
           { key: 'overview', label: 'نظرة عامة' },
+          { key: 'users', label: 'المستخدمين' },
           { key: 'licenses', label: 'التراخيص' },
           { key: 'subscriptions', label: 'الاشتراكات' },
           { key: 'analytics', label: 'التحليلات' },
@@ -411,6 +416,7 @@ export default function LicenseDashboardScreen() {
       </View>
 
       {activeTab === 'overview' && renderOverview()}
+      {activeTab === 'users' && renderUsers()}
       {activeTab === 'licenses' && renderLicenses()}
       {activeTab === 'subscriptions' && renderSubscriptions()}
       {activeTab === 'analytics' && renderAnalytics()}
@@ -762,5 +768,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#1f2937',
+  },
+  searchBar: {
+    backgroundColor: '#ffffff',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    marginBottom: 16,
+    textAlign: 'right',
+  },
+  userList: {
+    maxHeight: 400,
+  },
+  userCard: {
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    textAlign: 'right',
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'right',
+  },
+  selectUserButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  selectUserButtonText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

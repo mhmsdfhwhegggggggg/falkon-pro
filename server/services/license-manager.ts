@@ -6,7 +6,7 @@
 import crypto from 'crypto';
 import { encryptString, decryptString } from '../_core/crypto';
 import { db, licenses } from '../db';
-import { eq } from 'drizzle-orm';
+import { eq, and, or, desc } from 'drizzle-orm';
 
 export interface License {
   id: number;
@@ -319,12 +319,34 @@ export class LicenseManager {
     return true;
   }
 
+  async extendLicense(licenseKey: string, days: number): Promise<boolean> {
+    const license = await db.select().from(licenses).where(eq(licenses.licenseKey, licenseKey)).limit(1);
+    if (license.length === 0) return false;
+
+    const currentExpiry = license[0].expiresAt ? new Date(license[0].expiresAt) : new Date();
+    const newExpiry = new Date(currentExpiry.getTime() + days * 24 * 60 * 60 * 1000);
+
+    await db.update(licenses)
+      .set({ expiresAt: newExpiry, status: 'active' })
+      .where(eq(licenses.id, license[0].id));
+
+    return true;
+  }
+
   async getLicenseAnalytics(): Promise<any> {
-    // This would need aggregation queries
+    const all = await db.select().from(licenses);
+    
     return {
-      totalLicenses: 0,
-      activeLicenses: 0,
-      expiredLicenses: 0,
+      total: all.length,
+      active: all.filter((l: any) => l.status === 'active').length,
+      expired: all.filter((l: any) => l.status === 'expired').length,
+      pending: all.filter((l: any) => l.status === 'pending').length,
+      typeDistribution: {
+        trial: all.filter((l: any) => l.type === 'trial').length,
+        basic: all.filter((l: any) => l.type === 'basic').length,
+        premium: all.filter((l: any) => l.type === 'premium').length,
+        enterprise: all.filter((l: any) => l.type === 'enterprise').length,
+      }
     };
   }
 

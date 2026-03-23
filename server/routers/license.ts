@@ -2,8 +2,8 @@ import { router, publicProcedure, protectedProcedure, adminProcedure } from '../
 import { z } from 'zod';
 import { licenseManager, LicenseManager } from '../services/license-manager';
 import { getDb } from '../db';
-import { eq, and, desc } from 'drizzle-orm';
-import { licenses, subscriptions, licenseUsageLogs } from '../db/schema';
+import { licenses, subscriptions, licenseUsageLogs, users } from '../db/schema';
+import { eq, and, desc, ilike, or } from 'drizzle-orm';
 
 /**
  * License Management Router
@@ -146,6 +146,108 @@ export const licenseRouter = router({
           error: 'Failed to track usage',
           message: error instanceof Error ? error.message : 'Unknown error'
         };
+      }
+    }),
+
+  /**
+   * List all users (Admin only)
+   */
+  listUsers: adminProcedure
+    .input(z.object({
+      search: z.string().optional(),
+      limit: z.number().default(20),
+    }))
+    .query(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+
+        let query = db.select().from(users);
+        
+        if (input.search) {
+          const searchPattern = `%${input.search}%`;
+          (query as any) = query.where(
+            or(
+              ilike(users.email, searchPattern),
+              ilike(users.username, searchPattern)
+            )
+          );
+        }
+
+        const results = await query.limit(input.limit).orderBy(desc(users.createdAt));
+
+        return {
+          success: true,
+          users: results.map(u => ({
+            id: u.id,
+            email: u.email,
+            username: u.username,
+            role: u.role,
+            createdAt: u.createdAt,
+          }))
+        };
+      } catch (error) {
+        console.error('List users error:', error);
+        return { success: false, error: 'Failed to fetch users' };
+      }
+    }),
+
+  /**
+   * Reset hardware ID (Admin only)
+   */
+  resetHardwareId: adminProcedure
+    .input(z.object({
+      licenseKey: z.string().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+
+        // Reset HWID to allow reactivation
+        await db.update(licenses)
+          .set({ hardwareId: null, status: 'inactive' })
+          .where(eq(licenses.licenseKey, input.licenseKey));
+
+        return { success: true, message: 'Hardware ID reset successfully. License is now ready for reactivation.' };
+      } catch (error) {
+        console.error('Reset HWID error:', error);
+        return { success: false, error: 'Failed to reset hardware ID' };
+      }
+    }),
+
+  /**
+   * Extend license duration (Admin only)
+   */
+  extendLicense: adminProcedure
+    .input(z.object({
+      licenseKey: z.string().min(1),
+      days: z.number().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const success = await licenseManager.extendLicense(input.licenseKey, input.days);
+        return { success, message: success ? `License extended by ${input.days} days` : 'Failed to extend license' };
+      } catch (error) {
+        console.error('Extend license error:', error);
+        return { success: false, error: 'Failed to extend license' };
+      }
+    }),
+
+  /**
+   * Get all licenses (Admin only)
+   */
+  getAllLicenses: adminProcedure
+    .query(async () => {
+      try {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+
+        const allLicenses = await db.select().from(licenses).orderBy(desc(licenses.createdAt));
+        return { success: true, licenses: allLicenses };
+      } catch (error) {
+        console.error('Get all licenses error:', error);
+        return { success: false, error: 'Failed to fetch licenses' };
       }
     }),
 
