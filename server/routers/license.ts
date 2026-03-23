@@ -2,8 +2,8 @@ import { router, publicProcedure, protectedProcedure, adminProcedure } from '../
 import { z } from 'zod';
 import { licenseManager, LicenseManager } from '../services/license-manager';
 import { getDb } from '../db';
-import { eq, and, desc } from 'drizzle-orm';
-import { licenses, subscriptions, licenseUsageLogs } from '../db/schema';
+import { licenses, subscriptions, licenseUsageLogs, users } from '../db/schema';
+import { ilike, or } from 'drizzle-orm';
 
 /**
  * License Management Router
@@ -98,7 +98,7 @@ export const licenseRouter = router({
     }),
 
   /**
-   * Deactivate license
+   * Deactivate license (Admin only)
    */
   deactivateLicense: adminProcedure
     .input(z.object({
@@ -117,6 +117,57 @@ export const licenseRouter = router({
         return {
           success: false,
           error: 'Failed to deactivate license',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        };
+      }
+    }),
+
+  /**
+   * Reset Hardware ID (Admin only) - Allows user to activate on another device
+   */
+  resetHardwareId: adminProcedure
+    .input(z.object({
+      licenseKey: z.string().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const success = await licenseManager.deactivateLicense(input.licenseKey); // Deactivate resets HWID and status to pending
+
+        return {
+          success,
+          message: success ? 'Hardware ID reset successfully. User can now activate on a new device.' : 'Failed to reset Hardware ID'
+        };
+      } catch (error) {
+        console.error('HWID reset error:', error);
+        return {
+          success: false,
+          error: 'Failed to reset HWID',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        };
+      }
+    }),
+
+  /**
+   * Extend License (Admin only)
+   */
+  extendLicense: adminProcedure
+    .input(z.object({
+      licenseId: z.number(),
+      days: z.number().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const success = await (licenseManager as any).extendLicense(input.licenseId, input.days);
+
+        return {
+          success,
+          message: success ? `License extended by ${input.days} days` : 'Failed to extend license'
+        };
+      } catch (error) {
+        console.error('License extension error:', error);
+        return {
+          success: false,
+          error: 'Failed to extend license',
           message: error instanceof Error ? error.message : 'Unknown error'
         };
       }
@@ -386,51 +437,78 @@ export const licenseRouter = router({
     }),
 
   /**
-   * Encrypt data
+   * List all users (Admin only) - For granting licenses
    */
-  encryptData: adminProcedure
+  listUsers: adminProcedure
     .input(z.object({
-      data: z.string().min(1),
+      search: z.string().optional(),
+      limit: z.number().default(50),
     }))
-    .mutation(({ input }) => {
+    .query(async ({ input }) => {
       try {
-        const encrypted = (licenseManager as any).encryptData ? (licenseManager as any).encryptData(input.data) : input.data;
+        const db = await getDb();
+        if (!db) throw new Error('Database not connected');
+
+        let query = db.select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          role: users.role,
+          isActive: users.isActive,
+          createdAt: users.createdAt
+        }).from(users);
+
+        if (input.search) {
+          query = query.where(
+            or(
+              ilike(users.email, `%${input.search}%`),
+              ilike(users.username, `%${input.search}%`)
+            )
+          ) as any;
+        }
+
+        const userList = await query.limit(input.limit).orderBy(desc(users.createdAt));
 
         return {
           success: true,
-          encrypted,
+          users: userList,
         };
       } catch (error) {
-        console.error('Encryption error:', error);
+        console.error('List users error:', error);
         return {
           success: false,
-          error: 'Failed to encrypt data',
+          error: 'Failed to list users',
           message: error instanceof Error ? error.message : 'Unknown error'
         };
       }
     }),
 
   /**
-   * Decrypt data
+   * List all licenses (Admin only)
    */
-  decryptData: adminProcedure
+  getAllLicenses: adminProcedure
     .input(z.object({
-      encryptedData: z.string().min(1),
+      limit: z.number().default(100),
     }))
-    .mutation(({ input }) => {
+    .query(async ({ input }) => {
       try {
-        const decrypted = (licenseManager as any).decryptData ? (licenseManager as any).decryptData(input.encryptedData) : input.encryptedData;
+        const db = await getDb();
+        if (!db) throw new Error('Database not connected');
+
+        const allLicenses = await db.select()
+          .from(licenses)
+          .orderBy(desc(licenses.createdAt))
+          .limit(input.limit);
 
         return {
           success: true,
-          decrypted,
+          licenses: allLicenses,
         };
       } catch (error) {
-        console.error('Decryption error:', error);
+        console.error('Get all licenses error:', error);
         return {
           success: false,
-          error: 'Failed to decrypt data',
-          message: error instanceof Error ? error.message : 'Unknown error'
+          error: 'Failed to get licenses'
         };
       }
     }),

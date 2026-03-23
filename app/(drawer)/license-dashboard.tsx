@@ -16,36 +16,38 @@ const trpcAny = trpc as any;
  * - Hardware binding
  */
 export default function LicenseDashboardScreen() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'licenses' | 'subscriptions' | 'analytics'>('overview');
+  const [activeTab, setActiveTab] = useState<'users' | 'licenses' | 'analytics'>('users');
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newLicenseForm, setNewLicenseForm] = useState({
     userId: '',
-    type: 'basic',
+    email: '',
+    type: 'premium',
     durationDays: '30',
-    maxAccounts: '1',
-    maxMessages: '1000',
+    maxAccounts: '100',
+    maxMessages: '5000',
     autoRenew: false,
   });
 
   // tRPC queries
   const { data: analytics, refetch: refetchAnalytics } = trpcAny.license.getAnalytics.useQuery(undefined);
-  const { data: userLicenses, refetch: refetchLicenses } = trpcAny.license.getUserLicenses.useQuery(undefined);
+  const { data: allLicensesData, refetch: refetchAllLicenses } = trpcAny.license.getAllLicenses.useQuery({ limit: 100 });
+  const { data: usersData, refetch: refetchUsers } = trpcAny.license.listUsers.useQuery({ search: searchQuery, limit: 50 });
   const { data: hardwareId } = trpcAny.license.generateHardwareId.useQuery(undefined);
 
   // tRPC mutations
   const generateLicense = trpcAny.license.generateLicense.useMutation();
-  const validateLicense = trpcAny.license.validateLicense.useMutation();
-  const activateLicense = trpcAny.license.activateLicense.useMutation();
-  const createSubscription = trpcAny.license.createSubscription.useMutation();
-  const renewSubscription = trpcAny.license.renewSubscription.useMutation();
-  const cancelSubscription = trpcAny.license.cancelSubscription.useMutation();
+  const resetHwid = trpcAny.license.resetHardwareId.useMutation();
+  const extendLicense = trpcAny.license.extendLicense.useMutation();
+  const deactivateLicense = trpcAny.license.deactivateLicense.useMutation();
 
   const refreshData = async () => {
     setRefreshing(true);
     try {
       await Promise.all([
         refetchAnalytics(),
-        refetchLicenses(),
+        refetchAllLicenses(),
+        refetchUsers(),
       ]);
     } catch (error) {
       Alert.alert('خطأ', 'فشل تحديث البيانات');
@@ -68,10 +70,11 @@ export default function LicenseDashboardScreen() {
           Alert.alert('نجاح', `تم إنشاء الترخيص بنجاح: ${result.licenseKey}`);
           setNewLicenseForm({
             userId: '',
-            type: 'basic',
+            email: '',
+            type: 'premium',
             durationDays: '30',
-            maxAccounts: '1',
-            maxMessages: '1000',
+            maxAccounts: '100',
+            maxMessages: '5000',
             autoRenew: false,
           });
           refreshData();
@@ -134,43 +137,75 @@ export default function LicenseDashboardScreen() {
     }
   };
 
-  const renderOverview = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>📊 نظرة عامة</Text>
-
-      <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{analytics?.analytics?.totalLicenses || 0}</Text>
-          <Text style={styles.statLabel}>إجمالي التراخيص</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{analytics?.analytics?.activeLicenses || 0}</Text>
-          <Text style={styles.statLabel}>التراخيص النشطة</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>${analytics?.analytics?.totalRevenue || 0}</Text>
-          <Text style={styles.statLabel}>إجمالي الإيرادات</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{analytics?.analytics?.expiringSoon || 0}</Text>
-          <Text style={styles.statLabel}>تنتهي قريباً</Text>
-        </View>
-      </View>
-
-      <View style={styles.hardwareSection}>
-        <Text style={styles.hardwareTitle}>🔐 معرف الجهاز</Text>
-        <Text style={styles.hardwareId}>{hardwareId?.hardwareId || 'Loading...'}</Text>
-        <TouchableOpacity style={styles.copyButton} onPress={() => {
-          if (hardwareId?.hardwareId) {
-            Alert.alert('تم النسخ', 'تم نسخ معرف الجهاز');
+  const handleResetHwid = (licenseKey: string) => {
+    Alert.alert(
+      'تأكيد',
+      'هل أنت متأكد من إعادة ضبط معرف الجهاز لهذا الترخيص؟ سيتمكن المستخدم من استخدامه على جهاز جديد.',
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        {
+          text: 'إعادة ضبط',
+          style: 'destructive',
+          onPress: () => {
+            resetHwid.mutate({ licenseKey }, {
+              onSuccess: () => {
+                Alert.alert('تم', 'تمت إعادة ضبط معرف الجهاز بنجاح');
+                refreshData();
+              },
+              onError: (err: any) => Alert.alert('خطأ', err.message || 'فشل إعادة الضبط')
+            });
           }
-        }}>
-          <Text style={styles.copyButtonText}>نسخ</Text>
+        }
+      ]
+    );
+  };
+
+  const handleExtendLicense = (licenseId: number, days: number) => {
+    extendLicense.mutate({ licenseId, days }, {
+      onSuccess: () => {
+        Alert.alert('تم', `تم تمديد الترخيص بـ ${days} يوم`);
+        refreshData();
+      },
+      onError: (err: any) => Alert.alert('خطأ', err.message || 'فشل التمديد')
+    });
+  };
+
+  const renderUsers = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>👤 إدارة المستخدمين</Text>
+      
+      <View style={styles.searchBar}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="البحث بالبريد أو الاسم..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <TouchableOpacity style={styles.searchButton} onPress={() => refetchUsers()}>
+          <Text style={styles.searchButtonText}>بحث</Text>
         </TouchableOpacity>
       </View>
+
+      <ScrollView style={styles.userListScroll}>
+        {usersData?.users?.map((user: any) => (
+          <View key={user.id} style={styles.userCard}>
+            <View className="flex-1">
+              <Text style={styles.userName}>{user.username}</Text>
+              <Text style={styles.userEmail}>{user.email}</Text>
+              <Text style={styles.userId}>ID: {user.id} | رتبة: {user.role}</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.grantButton}
+              onPress={() => {
+                setNewLicenseForm({ ...newLicenseForm, userId: String(user.id), email: user.email });
+                setActiveTab('licenses');
+              }}
+            >
+              <Text style={styles.grantButtonText}>منح ترخيص</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 
@@ -182,14 +217,10 @@ export default function LicenseDashboardScreen() {
         <Text style={styles.formTitle}>إنشاء ترخيص جديد</Text>
 
         <View style={styles.formRow}>
-          <Text style={styles.formLabel}>معرف المستخدم:</Text>
-          <TextInput
-            style={styles.textInput}
-            value={newLicenseForm.userId}
-            onChangeText={(text) => setNewLicenseForm({ ...newLicenseForm, userId: text })}
-            placeholder="أدخل معرف المستخدم"
-            keyboardType="numeric"
-          />
+          <Text style={styles.formLabel}>المستخدم المختار:</Text>
+          <Text style={styles.selectedUserText}>
+            {newLicenseForm.email ? `${newLicenseForm.email} (ID: ${newLicenseForm.userId})` : "يرجى اختيار مستخدم من تبويب 'المستخدمين'"}
+          </Text>
         </View>
 
         <View style={styles.formRow}>
@@ -256,11 +287,14 @@ export default function LicenseDashboardScreen() {
       </View>
 
       <View style={styles.licenseList}>
-        <Text style={styles.listTitle}>التراخيص الحالية</Text>
-        {userLicenses?.licenses?.map((license: any) => (
+        <Text style={styles.listTitle}>أحدث التراخيص الصادرة</Text>
+        {allLicensesData?.licenses?.map((license: any) => (
           <View key={license.id} style={styles.licenseCard}>
             <View style={styles.licenseHeader}>
-              <Text style={styles.licenseKey}>{license.licenseKey}</Text>
+              <View>
+                <Text style={styles.licenseKey}>{license.licenseKey}</Text>
+                <Text style={styles.userIdText}>User ID: {license.userId}</Text>
+              </View>
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(license.status) }]}>
                 <Text style={styles.statusText}>{getStatusText(license.status)}</Text>
               </View>
@@ -268,9 +302,8 @@ export default function LicenseDashboardScreen() {
 
             <View style={styles.licenseDetails}>
               <Text style={styles.licenseDetail}>النوع: {license.type}</Text>
-              <Text style={styles.licenseDetail}>الحسابات: {license.maxAccounts}</Text>
-              <Text style={styles.licenseDetail}>الرسائل: {license.maxMessages}</Text>
-              <Text style={styles.licenseDetail}>الاستخدام: {license.usageCount}</Text>
+              <Text style={styles.licenseDetail}>الحسابات: {license.maxAccounts} | الرسائل: {license.maxMessages}</Text>
+              <Text style={styles.licenseDetail}>الجهاز المعرف: {license.hardwareId || 'لم يربط بعد'}</Text>
               {license.expiresAt && (
                 <Text style={styles.licenseDetail}>
                   ينتهي: {new Date(license.expiresAt).toLocaleDateString()}
@@ -280,24 +313,26 @@ export default function LicenseDashboardScreen() {
 
             <View style={styles.licenseActions}>
               <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => handleValidateLicense(license.licenseKey)}
+                style={[styles.actionButton, { backgroundColor: '#f59e0b' }]}
+                onPress={() => handleResetHwid(license.licenseKey)}
               >
-                <Text style={styles.actionButtonText}>تحقق</Text>
+                <Text style={styles.actionButtonText}>ضبط HWID</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionButton}
+                style={[styles.actionButton, { backgroundColor: '#10b981' }]}
+                onPress={() => handleExtendLicense(license.id, 30)}
+              >
+                <Text style={styles.actionButtonText}>تمديد 30 يوم</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#ef4444' }]}
                 onPress={() => {
-                  if (hardwareId?.hardwareId) {
-                    activateLicense.mutate({
-                      licenseKey: license.licenseKey,
-                      hardwareId: hardwareId.hardwareId,
-                    });
-                  }
+                  deactivateLicense.mutate({ licenseKey: license.licenseKey }, { onSuccess: () => refreshData() });
                 }}
               >
-                <Text style={styles.actionButtonText}>تفعيل</Text>
+                <Text style={styles.actionButtonText}>تعطيل</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -340,37 +375,33 @@ export default function LicenseDashboardScreen() {
 
       <View style={styles.analyticsGrid}>
         <View style={styles.analyticsCard}>
-          <Text style={styles.analyticsTitle}>توزيع الخطط</Text>
-          {Object.entries(analytics?.analytics?.planDistribution || {}).map(([plan, count]) => (
-            <View key={plan} style={styles.analyticsRow}>
-              <Text style={styles.analyticsLabel}>{plan}</Text>
-              <Text style={styles.analyticsValue}>{String(count)}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.analyticsCard}>
-          <Text style={styles.analyticsTitle}>الإيرادات</Text>
+          <Text style={styles.analyticsTitle}>نظرة عامة على التراخيص</Text>
           <View style={styles.analyticsRow}>
-            <Text style={styles.analyticsLabel}>الإجمالي:</Text>
-            <Text style={styles.analyticsValue}>${analytics?.analytics?.totalRevenue || 0}</Text>
+            <Text style={styles.analyticsLabel}>إجمالي التراخيص:</Text>
+            <Text style={styles.analyticsValue}>{analytics?.analytics?.totalLicenses || 0}</Text>
           </View>
           <View style={styles.analyticsRow}>
-            <Text style={styles.analyticsLabel}>شهري:</Text>
-            <Text style={styles.analyticsValue}>${analytics?.analytics?.monthlyRevenue || 0}</Text>
-          </View>
-        </View>
-
-        <View style={styles.analyticsCard}>
-          <Text style={styles.analyticsTitle}>حالة التراخيص</Text>
-          <View style={styles.analyticsRow}>
-            <Text style={styles.analyticsLabel}>نشط:</Text>
+            <Text style={styles.analyticsLabel}>نشطة:</Text>
             <Text style={styles.analyticsValue}>{analytics?.analytics?.activeLicenses || 0}</Text>
           </View>
           <View style={styles.analyticsRow}>
-            <Text style={styles.analyticsLabel}>منتهي:</Text>
+            <Text style={styles.analyticsLabel}>منتهية:</Text>
             <Text style={styles.analyticsValue}>{analytics?.analytics?.expiredLicenses || 0}</Text>
           </View>
+          <View style={styles.analyticsRow}>
+            <Text style={styles.analyticsLabel}>قيد التفعيل (Pending):</Text>
+            <Text style={styles.analyticsValue}>{analytics?.analytics?.pendingLicenses || 0}</Text>
+          </View>
+        </View>
+
+        <View style={styles.analyticsCard}>
+          <Text style={styles.analyticsTitle}>توزيع أنواع الاشتراكات</Text>
+          {analytics?.analytics?.typeDistribution && Object.entries(analytics.analytics.typeDistribution).map(([type, count]) => (
+            <View key={type} style={styles.analyticsRow}>
+              <Text style={styles.analyticsLabel}>{type === 'trial' ? 'تجريبي' : type === 'basic' ? 'أساسي' : type === 'premium' ? 'مميز' : 'مؤسسي'}:</Text>
+              <Text style={styles.analyticsValue}>{String(count)}</Text>
+            </View>
+          ))}
         </View>
       </View>
     </View>
@@ -387,9 +418,8 @@ export default function LicenseDashboardScreen() {
 
       <View style={styles.tabSelector}>
         {[
-          { key: 'overview', label: 'نظرة عامة' },
+          { key: 'users', label: 'المستخدمين' },
           { key: 'licenses', label: 'التراخيص' },
-          { key: 'subscriptions', label: 'الاشتراكات' },
           { key: 'analytics', label: 'التحليلات' },
         ].map((tab) => (
           <TouchableOpacity
@@ -410,9 +440,8 @@ export default function LicenseDashboardScreen() {
         ))}
       </View>
 
-      {activeTab === 'overview' && renderOverview()}
+      {activeTab === 'users' && renderUsers()}
       {activeTab === 'licenses' && renderLicenses()}
-      {activeTab === 'subscriptions' && renderSubscriptions()}
       {activeTab === 'analytics' && renderAnalytics()}
     </ScrollView>
   );
@@ -763,4 +792,81 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1f2937',
   },
+  userIdText: {
+    fontSize: 10,
+    color: '#9ca3af',
+    marginTop: 2,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  searchButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  searchButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  userListScroll: {
+    maxHeight: 400,
+  },
+  userCard: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  userEmail: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  userId: {
+    fontSize: 10,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  grantButton: {
+    backgroundColor: '#10b981',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  grantButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  selectedUserText: {
+    fontSize: 14,
+    color: '#3b82f6',
+    fontWeight: 'bold',
+    backgroundColor: '#eff6ff',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dbeafe',
+  }
 });

@@ -3,6 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { trpc } from '@/lib/trpc';
 import { getHardwareId } from '@/lib/hwid';
 import { router } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useColors } from '@/hooks/use-colors';
 
 export default function LicenseActivationScreen() {
   const [licenseKey, setLicenseKey] = useState('');
@@ -60,9 +63,30 @@ export default function LicenseActivationScreen() {
         </View>
 
         <View style={styles.infoContainer}>
-            <Text style={styles.infoLabel}>معرف الجهاز (HWID):</Text>
+            <View className="flex-row justify-between items-center mb-1">
+                <TouchableOpacity 
+                   className="bg-primary/10 px-2 py-1 rounded flex-row items-center gap-1"
+                   onPress={async () => {
+                     await Clipboard.setStringAsync(hwid);
+                     Alert.alert('تم النسخ', 'تم نسخ معرف الجهاز بنجاح');
+                   }}
+                >
+                  <IconSymbol name="doc.on.doc.fill" size={12} color="#007AFF" />
+                  <Text style={{ color: '#007AFF', fontSize: 10, fontWeight: 'bold' }}>نسخ الـ ID</Text>
+                </TouchableOpacity>
+                <Text style={styles.infoLabel}>معرف الجهاز (HWID):</Text>
+            </View>
             <Text style={styles.hwidText} numberOfLines={1}>{hwid || 'جاري التحميل...'}</Text>
         </View>
+
+        <TouchableOpacity 
+          className="mb-6"
+          onPress={() => Alert.alert('الدعم الفني', 'يرجى إرسال معرف الجهاز (HWID) للمسؤول لتفعيل حسابك.')}
+        >
+          <Text className="text-primary text-center text-xs font-bold underline">
+            تحتاج مساعدة؟ تواصل مع الإدارة لتفعيل حسابك
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity 
           style={[styles.button, loading && styles.buttonDisabled]} 

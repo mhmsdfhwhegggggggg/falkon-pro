@@ -18,15 +18,16 @@ export default function HomeScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch dashboard stats from API
+  // Fetch dashboard stats and license status
   const { data: statsData, isLoading, refetch: refetchStats } = trpc.dashboard.getStats.useQuery(undefined);
   const { data: activitiesData, refetch: refetchActivities } = trpc.dashboard.getRecentActivities.useQuery(undefined);
+  const { data: licenseData, refetch: refetchLicense } = trpc.license.getUserLicenses.useQuery(undefined);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([refetchStats(), refetchActivities()]);
+    await Promise.all([refetchStats(), refetchActivities(), refetchLicense()]);
     setRefreshing(false);
-  }, [refetchStats, refetchActivities]);
+  }, [refetchStats, refetchActivities, refetchLicense]);
 
   const stats = statsData || {
     totalAccounts: 0,
@@ -93,6 +94,32 @@ export default function HomeScreen() {
               style={{ width: 70, height: 70, borderRadius: 20 }}
             />
           </View>
+
+          {/* Membership Card */}
+          {licenseData?.licenses && licenseData.licenses.length > 0 && (
+            <GlassCard delay={50} variant="neon" className="p-4 border-l-4" style={{ borderLeftColor: colors.primary }}>
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-3">
+                  <View className="w-10 h-10 rounded-full bg-primary/20 items-center justify-center">
+                    <IconSymbol name="star.fill" size={20} color={colors.primary} />
+                  </View>
+                  <View>
+                    <Text className="text-lg font-bold text-foreground">
+                      {licenseData.licenses[0].type.toUpperCase()} MEMBER
+                    </Text>
+                    <Text className="text-xs text-muted">
+                      {licenseData.licenses[0].expiresAt 
+                        ? `ينتهي في: ${new Date(licenseData.licenses[0].expiresAt).toLocaleDateString()}` 
+                        : 'اشتراك مدى الحياة ♾️'}
+                    </Text>
+                  </View>
+                </View>
+                <View className="bg-primary/10 px-3 py-1 rounded-full">
+                  <Text className="text-primary text-xs font-bold">نشط ✅</Text>
+                </View>
+              </View>
+            </GlassCard>
+          )}
 
           {/* Statistics Section */}
           {isLoading ? (

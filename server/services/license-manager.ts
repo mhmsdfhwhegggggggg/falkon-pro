@@ -257,17 +257,42 @@ export class LicenseManager {
       return cached.license;
     }
 
+    // Fetch the latest active or pending license for the current user
+    // Sorted by createdAt descending to ensure we get the most recent one
     const license = await db.query.licenses.findFirst({
-      where: eq(licenses.userId, userId)
+      where: eq(licenses.userId, userId),
+      orderBy: [desc(licenses.createdAt)]
     });
 
     let result: License | null = null;
-    if (license && license.status === 'active') {
+    if (license && (license.status === 'active' || license.status === 'pending')) {
       result = license as unknown as License;
     }
     
     this.licenseCache.set(userId, { license: result, timestamp: now });
     return result;
+  }
+
+  /**
+   * Extend license duration
+   */
+  async extendLicense(licenseId: number, additionalDays: number): Promise<boolean> {
+    const license = await db.query.licenses.findFirst({
+      where: eq(licenses.id, licenseId)
+    });
+
+    if (!license) return false;
+
+    const currentExpiry = license.expiresAt || new Date();
+    const newExpiry = new Date(currentExpiry.getTime() + additionalDays * 24 * 60 * 60 * 1000);
+
+    await db.update(licenses).set({
+      expiresAt: newExpiry,
+      status: 'active' // Reactivate if it was expired
+    }).where(eq(licenses.id, licenseId));
+
+    this.licenseCache.delete(license.userId);
+    return true;
   }
 
   private getMaxAccountsForType(type: string): number {
@@ -325,11 +350,22 @@ export class LicenseManager {
   }
 
   async getLicenseAnalytics(): Promise<any> {
-    // This would need aggregation queries
+    const allLicenses = await db.select().from(licenses);
+    const active = allLicenses.filter(l => l.status === 'active').length;
+    const expired = allLicenses.filter(l => l.status === 'expired').length;
+    const pending = allLicenses.filter(l => l.status === 'pending').length;
+
     return {
-      totalLicenses: 0,
-      activeLicenses: 0,
-      expiredLicenses: 0,
+      totalLicenses: allLicenses.length,
+      activeLicenses: active,
+      expiredLicenses: expired,
+      pendingLicenses: pending,
+      typeDistribution: {
+        trial: allLicenses.filter(l => l.type === 'trial').length,
+        basic: allLicenses.filter(l => l.type === 'basic').length,
+        premium: allLicenses.filter(l => l.type === 'premium').length,
+        enterprise: allLicenses.filter(l => l.type === 'enterprise').length,
+      }
     };
   }
 
