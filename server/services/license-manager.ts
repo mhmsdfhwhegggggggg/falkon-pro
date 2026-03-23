@@ -6,7 +6,7 @@
 import crypto from 'crypto';
 import { encryptString, decryptString } from '../_core/crypto';
 import { db, licenses } from '../db';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 
 export interface License {
   id: number;
@@ -351,9 +351,9 @@ export class LicenseManager {
 
   async getLicenseAnalytics(): Promise<any> {
     const allLicenses = await db.select().from(licenses);
-    const active = allLicenses.filter(l => l.status === 'active').length;
-    const expired = allLicenses.filter(l => l.status === 'expired').length;
-    const pending = allLicenses.filter(l => l.status === 'pending').length;
+    const active = allLicenses.filter((l: typeof allLicenses[number]) => l.status === 'active').length;
+    const expired = allLicenses.filter((l: typeof allLicenses[number]) => l.status === 'expired').length;
+    const pending = allLicenses.filter((l: typeof allLicenses[number]) => l.status === 'pending').length;
 
     return {
       totalLicenses: allLicenses.length,
@@ -361,10 +361,10 @@ export class LicenseManager {
       expiredLicenses: expired,
       pendingLicenses: pending,
       typeDistribution: {
-        trial: allLicenses.filter(l => l.type === 'trial').length,
-        basic: allLicenses.filter(l => l.type === 'basic').length,
-        premium: allLicenses.filter(l => l.type === 'premium').length,
-        enterprise: allLicenses.filter(l => l.type === 'enterprise').length,
+        trial: allLicenses.filter((l: typeof allLicenses[number]) => l.type === 'trial').length,
+        basic: allLicenses.filter((l: typeof allLicenses[number]) => l.type === 'basic').length,
+        premium: allLicenses.filter((l: typeof allLicenses[number]) => l.type === 'premium').length,
+        enterprise: allLicenses.filter((l: typeof allLicenses[number]) => l.type === 'enterprise').length,
       }
     };
   }

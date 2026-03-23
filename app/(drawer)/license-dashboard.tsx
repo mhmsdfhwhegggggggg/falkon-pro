@@ -37,6 +37,7 @@ export default function LicenseDashboardScreen() {
 
   // tRPC mutations
   const generateLicense = trpcAny.license.generateLicense.useMutation();
+  const validateLicense = trpcAny.license.validateLicense.useMutation();
   const resetHwid = trpcAny.license.resetHardwareId.useMutation();
   const extendLicense = trpcAny.license.extendLicense.useMutation();
   const deactivateLicense = trpcAny.license.deactivateLicense.useMutation();

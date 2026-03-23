@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { licenseManager, LicenseManager } from '../services/license-manager';
 import { getDb } from '../db';
 import { licenses, subscriptions, licenseUsageLogs, users } from '../db/schema';
-import { ilike, or } from 'drizzle-orm';
+import { eq, desc, ilike, or } from 'drizzle-orm';
 
 /**
  * License Management Router
