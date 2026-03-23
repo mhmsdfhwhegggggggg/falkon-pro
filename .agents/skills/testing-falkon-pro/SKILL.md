@@ -1,82 +1,94 @@
 # Testing Falkon Pro
 
 ## Overview
-Falkon Pro is a full-stack TypeScript application with:
-- **Backend**: Express.js + tRPC server (port 3000)
-- **Frontend**: React Native / Expo (port 8081)
-- **Database**: PostgreSQL (via Drizzle ORM)
-- **Queue**: Redis/BullMQ with MockQueue fallback
-- **External**: Telegram API integration
-
-## Quick Validation Commands
-```bash
-# TypeScript type checking
-npx tsc --noEmit
-
-# Server build
-npm run build
-
-# Worker build  
-npm run build:worker
-
-# Start dev server only (no frontend)
-npm run dev:server
-
-# Start both server + Expo frontend
-npm run dev
-
-# Run test suite (requires PostgreSQL)
-npm run test
-```
-
-## Local Development Setup
-
-### Minimum (Server Only, No DB)
-The server will start without PostgreSQL or Redis:
-- Redis falls back to MockQueue automatically
-- Database operations will fail gracefully (health check shows "degraded")
-- Health endpoints (`/`, `/health`, `/live`, `/ready`) will respond
-- tRPC routes that require DB will return errors
-
-This is useful for verifying TypeScript fixes, build integrity, and server startup.
-
-### Full Setup (Requires PostgreSQL)
-For full integration testing:
-1. Install and start PostgreSQL
-2. Set `DATABASE_URL=postgresql://user:pass@localhost:5432/falkon_pro`
-3. Run `npm run db:push` to generate and apply migrations
-4. Start server: `npm run dev:server`
-5. (Optional) Start Redis for real queue processing
-6. (Optional) Set `TELEGRAM_API_ID` and `TELEGRAM_API_HASH` for Telegram features
-
-### Environment Variables
-Key env vars (see `server/_core/env.ts` for full list):
-- `DATABASE_URL` - PostgreSQL connection string (default: `file:./dev.db` but only PostgreSQL works)
-- `REDIS_URL` - Redis URL (optional, falls back to MockQueue)
-- `JWT_SECRET` - Must be >= 32 chars for auth
-- `ENCRYPTION_KEY` - Must be exactly 32 chars
-- `TELEGRAM_API_ID` / `TELEGRAM_API_HASH` - Required in production
-- `PORT` - Server port (default: 3000, auto-increments if busy)
-
-## Health Endpoints
-- `GET /` - Root status page (always 200)
-- `GET /health` - Full health check (200 if all OK, 503 if degraded)
-- `GET /live` - Liveness probe (always 200 with `{"alive":true}`)
-- `GET /ready` - Readiness probe (503 if DB not connected)
-
-## Build & Deploy
-- Project uses **npm** (not pnpm) - `package-lock.json` is the lockfile
-- `Dockerfile.production` uses multi-stage build with `npm ci`
-- Render configs (`render-production.yaml`, `render-deploy.yaml`) use `npm install && npm run build`
-- Start commands: `npm run start` (runs migrations then starts server), `npm run start:worker`
-
-## Known Issues
-- Port 3000 may be occupied; server auto-finds next available port
-- `npm ci` in Docker may fail if lockfile version doesn't match Docker's npm version
-- The app uses `trpcAny` (untyped tRPC client) in frontend, so client-server mismatches won't be caught by TypeScript
-- No CI/CD pipeline is configured on the repository
+Falkon Pro is a Telegram automation platform built with Expo (React Native) frontend and Express.js + tRPC backend with PostgreSQL.
 
 ## Devin Secrets Needed
-- `DATABASE_URL` - PostgreSQL connection string for full integration testing
-- `TELEGRAM_API_ID` - Telegram API ID for Telegram feature testing
-- `TELEGRAM_API_HASH` - Telegram API hash for Telegram feature testing
+- No external secrets required for local testing
+- Admin credentials are configured in `.env` (ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME)
+
+## Environment Setup
+
+### Prerequisites
+- PostgreSQL must be running on localhost:5432
+- Database `falkon_pro` with user `falkon` / password `falkon123`
+- Node.js v22+
+
+### Database Setup
+```bash
+sudo -u postgres psql -c "CREATE USER falkon WITH PASSWORD 'falkon123';"
+sudo -u postgres psql -c "CREATE DATABASE falkon_pro OWNER falkon;"
+npm run db:push  # Runs drizzle-kit generate && drizzle-kit migrate
+```
+
+### Starting the Server
+```bash
+# Source .env first (it sets DATABASE_URL, JWT_SECRET, etc.)
+cd /home/ubuntu/repos/falkon-pro
+source .env
+PORT=3000 npx tsx watch server/_core/index.ts
+```
+- Server runs on port 3000 by default
+- If port 3000 is busy, it auto-increments (3001, 3002, etc.)
+- The tRPC client (frontend) expects the server on port 3000 when running locally
+
+### Starting the Web App (Expo Web)
+```bash
+npx expo start --web --port 8081
+```
+
+**Known Issue:** Expo web may fail to start with `ReferenceError: require is not defined` in `tailwind.config.js`. This is a pre-existing CJS/ESM incompatibility (`package.json` has `"type": "module"` but `tailwind.config.js` uses `require()`). This blocks UI testing in the browser. If you encounter this, fall back to API-level testing via curl.
+
+## Testing Server-Side Features via tRPC API
+
+tRPC endpoints are at `http://localhost:3000/api/trpc/{router}.{procedure}`.
+
+### Authentication
+```bash
+# Login
+curl -s -X POST http://localhost:3000/api/trpc/auth.login \
+  -H "Content-Type: application/json" \
+  -d '{"json":{"email":"admin@falcon.pro","password":"admin123456"}}'
+
+# Register (requires ENABLE_REGISTRATION=true in .env)
+curl -s -X POST http://localhost:3000/api/trpc/auth.register \
+  -H "Content-Type: application/json" \
+  -d '{"json":{"email":"test@test.com","password":"test123456","name":"Test User"}}'
+```
+
+### Protected Endpoints
+For endpoints requiring auth, extract the JWT token from login response and pass as Bearer token:
+```bash
+curl -s -X POST http://localhost:3000/api/trpc/dashboard.getStats \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <JWT_TOKEN>" \
+  -d '{"json":{}}'
+```
+
+### License Validation
+```bash
+curl -s -X POST http://localhost:3000/api/trpc/security.validateLicense \
+  -H "Content-Type: application/json" \
+  -d '{"json":{"key":"test-key","hwid":"test-hwid"}}'
+```
+When `ENABLE_LICENSE_CHECK=false`, this always returns `{valid: true, type: "unlimited"}`.
+
+## Code Quality Checks
+```bash
+npm run check   # TypeScript typecheck (tsc --noEmit)
+npm run lint    # ESLint via Expo (expo lint)
+```
+
+## Key Architecture Notes
+- **tRPC routers** are in `server/routers/` - each router handles a feature domain
+- **Screens** are in `app/(drawer)/` - Expo Router with drawer navigation
+- **DB schema** uses Drizzle ORM - schema in `server/db/schema.ts`
+- **Auth** uses JWT tokens signed with HS256
+- The `users` table has a `username` field (not `name`) - be careful with this distinction
+- License check can be disabled via `ENABLE_LICENSE_CHECK=false` in `.env`
+
+## Common Gotchas
+- The `source .env` command may print `bash: Admin: command not found` due to spaces in ADMIN_NAME - this is harmless
+- tRPC mutations require POST requests (GET will return METHOD_NOT_SUPPORTED error)
+- Shell commands with `app/(drawer)/` paths need quotes around the parentheses
+- The server uses `superjson` transformer - curl requests should use `{"json":{...}}` format
