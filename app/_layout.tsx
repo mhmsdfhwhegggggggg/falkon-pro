@@ -1,3 +1,4 @@
+import "./polyfill";
 import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";

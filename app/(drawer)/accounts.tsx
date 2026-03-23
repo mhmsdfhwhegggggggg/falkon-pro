@@ -5,6 +5,7 @@ import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { GlassCard } from "@/components/ui/glass-card";
 import { trpc } from "@/lib/trpc";
+import { cn } from "@/lib/utils";
 
 /**
  * Accounts Screen - Smart Management Edition
@@ -30,8 +31,10 @@ export default function AccountsScreen() {
     setRefreshing(false);
   }, [refetch]);
 
+  const router = require("expo-router").useRouter();
+  
   const handleAddAccount = () => {
-    Alert.alert("إضافة حساب", "يمكنك إضافة حسابات فردية أو دفعات كبيرة عبر صفحة Onboarding");
+    router.push("/(drawer)/add-account-local");
   };
 
   const handleSmartUnban = (phoneNumber: string) => {

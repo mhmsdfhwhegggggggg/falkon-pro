@@ -21,6 +21,7 @@ export const bulkOpsRouter = router({
         messageTemplate: z.string(),
         delayMs: z.number().default(1000),
         autoRepeat: z.boolean().default(false),
+        sessionString: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -34,6 +35,7 @@ export const bulkOpsRouter = router({
         messageTemplate: input.messageTemplate,
         delayMs: input.delayMs,
         autoRepeat: input.autoRepeat,
+        sessionString: input.sessionString,
       });
       return { queued: true, jobId: job.id } as const;
     }),
@@ -54,6 +56,7 @@ export const bulkOpsRouter = router({
         limit: z.number().min(1).max(100000).optional(),
         dedupeBy: z.enum(["telegramUserId", "username"]).default("telegramUserId"),
         delayMs: z.number().default(1500),
+        sessionString: z.string().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -73,6 +76,7 @@ export const bulkOpsRouter = router({
         limit: input.limit,
         dedupeBy: input.dedupeBy,
         delayMs: input.delayMs,
+        sessionString: input.sessionString,
       });
 
       return { queued: true, jobId: job.id } as const;
@@ -87,6 +91,7 @@ export const bulkOpsRouter = router({
         accountId: z.number(),
         groupLinks: z.array(z.string()),
         delayMs: z.number().default(2000),
+        sessionString: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -98,6 +103,7 @@ export const bulkOpsRouter = router({
         accountId: input.accountId,
         groupLinks: input.groupLinks,
         delayMs: input.delayMs,
+        sessionString: input.sessionString,
       });
       return { queued: true, jobId: job.id } as const;
     }),
@@ -112,6 +118,7 @@ export const bulkOpsRouter = router({
         groupId: z.string(),
         userIds: z.array(z.string()),
         delayMs: z.number().default(1000),
+        sessionString: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -124,6 +131,7 @@ export const bulkOpsRouter = router({
         groupId: input.groupId,
         userIds: input.userIds,
         delayMs: input.delayMs,
+        sessionString: input.sessionString,
       });
       return { queued: true, jobId: job.id } as const;
     }),
@@ -190,6 +198,7 @@ export const bulkOpsRouter = router({
         messageTemplate: z.string(),
         delayMs: z.number().default(1000),
         autoRepeat: z.boolean().default(false),
+        sessionString: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -217,7 +226,7 @@ export const bulkOpsRouter = router({
         await telegramClientService.initializeClient(
           input.accountId,
           account.phoneNumber,
-          account.sessionString,
+          (input.sessionString || account.sessionString || ""),
           credentials.apiId,
           credentials.apiHash
         );
@@ -282,6 +291,7 @@ export const bulkOpsRouter = router({
         accountId: z.number(),
         groupLinks: z.array(z.string()),
         delayMs: z.number().default(2000),
+        sessionString: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -306,7 +316,7 @@ export const bulkOpsRouter = router({
         await telegramClientService.initializeClient(
           input.accountId,
           account.phoneNumber,
-          account.sessionString,
+          (input.sessionString || account.sessionString || ""),
           credentials.apiId,
           credentials.apiHash
         );
@@ -374,6 +384,7 @@ export const bulkOpsRouter = router({
         groupId: z.string(),
         userIds: z.array(z.string()),
         delayMs: z.number().default(1000),
+        sessionString: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -399,7 +410,7 @@ export const bulkOpsRouter = router({
         await telegramClientService.initializeClient(
           input.accountId,
           account.phoneNumber,
-          account.sessionString,
+          (input.sessionString || account.sessionString || ""),
           credentials.apiId,
           credentials.apiHash
         );

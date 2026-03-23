@@ -127,13 +127,24 @@ export class TelegramClientService {
 
     await client.connect();
     try {
-      await client.signIn({
-        phoneNumber,
-        phoneCodeHash,
-        phoneCode: code,
-        password: async () => password || "",
-        onError: (err) => { throw err; }
-      });
+      try {
+        await client.invoke(
+          new Api.auth.SignIn({
+            phoneNumber,
+            phoneCodeHash,
+            phoneCode: code,
+          })
+        );
+      } catch (signInErr: any) {
+        if (signInErr.message.includes("SESSION_PASSWORD_NEEDED") && password) {
+          await client.signInWithPassword(
+            { apiId: credentials.apiId, apiHash: credentials.apiHash },
+            { password: async () => password, onError: (err) => { throw err; } }
+          );
+        } else {
+          throw signInErr;
+        }
+      }
 
       const sessionString = (client.session as any).save() as string;
       await client.disconnect();

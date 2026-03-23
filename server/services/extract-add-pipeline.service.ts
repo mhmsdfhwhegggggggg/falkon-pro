@@ -495,7 +495,7 @@ export class ExtractAddPipeline {
       return await telegramClientService.initializeClient(
         accountId,
         account.phoneNumber,
-        account.sessionString,
+        (account.sessionString || ""),
         credentials.apiId,
         credentials.apiHash
       );

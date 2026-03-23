@@ -1,0 +1,1 @@
+ALTER TABLE "telegram_accounts" ALTER COLUMN "session_string" DROP NOT NULL;

@@ -17,6 +17,7 @@ export const extractionRouter = router({
         accountId: z.number(),
         groupId: z.string(),
         groupName: z.string().optional(),
+        sessionString: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -32,7 +33,7 @@ export const extractionRouter = router({
         const client = await telegramClientService.initializeClient(
           input.accountId,
           account.phoneNumber,
-          account.sessionString,
+          (input.sessionString || account.sessionString || ""),
           credentials.apiId,
           credentials.apiHash
         );
@@ -100,6 +101,7 @@ export const extractionRouter = router({
         accountId: z.number(),
         groupId: z.string(),
         daysActive: z.number().default(7),
+        sessionString: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -114,7 +116,7 @@ export const extractionRouter = router({
         await telegramClientService.initializeClient(
           input.accountId,
           account.phoneNumber,
-          account.sessionString,
+          (input.sessionString || account.sessionString || ""),
           credentials.apiId,
           credentials.apiHash
         );
@@ -172,6 +174,7 @@ export const extractionRouter = router({
       z.object({
         accountId: z.number(),
         groupId: z.string(),
+        sessionString: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -186,7 +189,7 @@ export const extractionRouter = router({
         await telegramClientService.initializeClient(
           input.accountId,
           account.phoneNumber,
-          account.sessionString,
+          (input.sessionString || account.sessionString || ""),
           credentials.apiId,
           credentials.apiHash
         );

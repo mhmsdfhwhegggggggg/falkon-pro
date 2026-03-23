@@ -8,6 +8,13 @@
       "when": 1774129041530,
       "tag": "0000_red_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774229632525,
+      "tag": "0001_damp_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }

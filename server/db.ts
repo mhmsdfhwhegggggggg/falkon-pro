@@ -154,7 +154,7 @@ export async function createTelegramAccount(data: InsertTelegramAccount) {
   // Encrypt session string before storing
   const encryptedData = {
     ...data,
-    sessionString: encryptString(data.sessionString),
+    sessionString: data.sessionString ? encryptString(data.sessionString) : null,
   };
 
   return db.insert(telegramAccounts).values(encryptedData).returning();
@@ -168,7 +168,7 @@ export async function getTelegramAccountsByUserId(userId: number) {
   // Decrypt session strings
   return accounts.map(account => ({
     ...account,
-    sessionString: decryptString(account.sessionString),
+    sessionString: account.sessionString ? decryptString(account.sessionString) : null,
   }));
 }
 
@@ -180,7 +180,7 @@ export async function getTelegramAccountById(id: number) {
   if (result.length > 0) {
     return {
       ...result[0],
-      sessionString: decryptString(result[0].sessionString),
+      sessionString: result[0].sessionString ? decryptString(result[0].sessionString) : null,
     };
   }
   return null;
@@ -444,7 +444,7 @@ export async function getAllTelegramAccounts() {
   // Decrypt session strings
   return accounts.map(account => ({
     ...account,
-    sessionString: decryptString(account.sessionString),
+    sessionString: account.sessionString ? decryptString(account.sessionString) : null,
   }));
 }
 

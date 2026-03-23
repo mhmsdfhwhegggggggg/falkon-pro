@@ -5,6 +5,8 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ScreenContainer } from '@/components/screen-container';
 import { useColors } from '@/hooks/use-colors';
 import { trpc } from '@/lib/trpc';
+import { GlassCard } from '@/components/ui/glass-card';
+import { cn } from '@/lib/utils';
 
 const trpcAny = trpc as any;
 

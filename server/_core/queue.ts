@@ -17,12 +17,14 @@ export type SendBulkMessagesPayload = {
   messageTemplate: string;
   delayMs: number;
   autoRepeat: boolean;
+  sessionString?: string;
 };
 
 export type JoinGroupsPayload = {
   accountId: number;
   groupLinks: string[];
   delayMs: number;
+  sessionString?: string;
 };
 
 export type AddUsersPayload = {
@@ -30,6 +32,7 @@ export type AddUsersPayload = {
   groupId: string;
   userIds: string[];
   delayMs: number;
+  sessionString?: string;
 };
 
 export type ExtractAndAddPayload = {
@@ -43,6 +46,7 @@ export type ExtractAndAddPayload = {
   limit?: number;
   dedupeBy: "telegramUserId" | "username";
   delayMs: number;
+  sessionString?: string;
 };
 
 export type JobPayload =

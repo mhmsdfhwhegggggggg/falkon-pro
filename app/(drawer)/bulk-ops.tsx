@@ -7,6 +7,7 @@ import { useColors } from "@/hooks/use-colors";
 import { GlassCard } from "@/components/ui/glass-card";
 import { trpc } from "@/lib/trpc";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { localSessionStore } from "@/lib/local-session-store";
 
 const trpcAny = trpc as any;
 
@@ -46,11 +47,12 @@ export default function BulkOpsScreen() {
     { id: "join-groups", label: "انضمام للجروبات", icon: "person.3.fill" as const, color: colors.warning },
   ];
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!selectedAccountId) return Alert.alert("تنبيه", "يرجى اختيار حساب أولاً");
     if (!targetList.trim()) return Alert.alert("تنبيه", "يرجى إدخال قائمة الأهداف");
 
     const targets = targetList.split('\n').map(t => t.trim()).filter(t => t.length > 0);
+    const sessionString = await localSessionStore.getAccountSession(selectedAccountId);
 
     if (operationType === "messages") {
       if (!messageTemplate) return Alert.alert("تنبيه", "يرجى إدخال نص الرسالة");
@@ -60,6 +62,7 @@ export default function BulkOpsScreen() {
         messageTemplate,
         delayMs: parseInt(delayMs) || 2000,
         autoRepeat,
+        sessionString,
       }, {
         onSuccess: (data: any) => {
           setJobId(data.jobId);
@@ -76,6 +79,7 @@ export default function BulkOpsScreen() {
         groupId: targetGroupId.trim(),
         userIds: targets,
         delayMs: parseInt(delayMs) || 1000,
+        sessionString,
       }, {
         onSuccess: (data: any) => {
           setJobId(data.jobId);

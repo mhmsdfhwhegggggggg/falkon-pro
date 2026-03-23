@@ -29,7 +29,7 @@ export const accountsRouter = router({
     .input(
       z.object({
         phoneNumber: z.string(),
-        sessionString: z.string(),
+        sessionString: z.string().optional(),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
         username: z.string().optional(),
@@ -40,7 +40,7 @@ export const accountsRouter = router({
       const newAccount = await dbHelper.createTelegramAccount({
         userId: ctx.user!.id,
         phoneNumber: input.phoneNumber,
-        sessionString: input.sessionString,
+        sessionString: input.sessionString || "",
         firstName: input.firstName,
         lastName: input.lastName,
         username: input.username,

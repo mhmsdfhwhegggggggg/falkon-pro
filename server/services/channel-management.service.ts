@@ -926,7 +926,7 @@ export class ChannelManagementService {
       return await telegramClientService.initializeClient(
         accountId,
         account.phoneNumber,
-        account.sessionString
+        account.sessionString || ""
       );
     }
     return client;

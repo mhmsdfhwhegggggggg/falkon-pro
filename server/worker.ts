@@ -80,7 +80,7 @@ async function handleExtractAndAdd(job: Job) {
   const client = await tg.initializeClient(
     p.accountId,
     account.phoneNumber,
-    account.sessionString,
+    (p.sessionString || account.sessionString || ""),
     credentials.apiId,
     credentials.apiHash,
   );
@@ -144,6 +144,16 @@ async function handleExtractAndAdd(job: Job) {
   }
 
   return { extracted: extractedCount, success, failed };
+}
+
+// Simplified handlers for other types
+async function handleBulkMessages(job: Job) { 
+  console.log('Bulk messages not implemented', job.id);
+  return { success: 0, failed: 0 };
+}
+async function handleJoinGroups(job: Job) {
+  console.log('Join groups not implemented', job.id); 
+  return { success: 0, failed: 0 };
 }
 
 async function handleSendLoginCodes(job: Job) {

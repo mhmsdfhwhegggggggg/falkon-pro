@@ -61,6 +61,14 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
+        name="add-account-local"
+        options={{
+          drawerLabel: "إضافة حساب (محلي)",
+          title: "تسجيل دخول آمن",
+          drawerIcon: ({ color }) => <IconSymbol size={24} name="lock.shield" color={color} />,
+        }}
+      />
+      <Drawer.Screen
         name="extraction"
         options={{
           drawerLabel: "الاستخراج الذكي",

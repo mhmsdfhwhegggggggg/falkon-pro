@@ -7,6 +7,7 @@ import { useColors } from "@/hooks/use-colors";
 import { GlassCard } from "@/components/ui/glass-card";
 import { trpc } from "@/lib/trpc";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { localSessionStore } from "@/lib/local-session-store";
 
 const trpcAny = trpc as any;
 
@@ -42,15 +43,18 @@ export default function ExtractionScreen() {
 
   const extractAdminsMutation = trpcAny.extraction.extractAdmins.useMutation();
 
-  const handleStartExtraction = () => {
+  const handleStartExtraction = async () => {
     if (!selectedAccountId) return Alert.alert("تنبيه", "يرجى اختيار حساب أولاً");
     if (!groupId) return Alert.alert("تنبيه", "يرجى إدخال معرّف الجروب أو الرابط");
+
+    const sessionString = await localSessionStore.getAccountSession(selectedAccountId);
 
     if (extractMode === 'engaged') {
       extractEngagedMutation.mutate({
         accountId: selectedAccountId,
         groupId,
-        daysActive: parseInt(daysActive) || 7
+        daysActive: parseInt(daysActive) || 7,
+        sessionString
       }, {
         onSuccess: (data: any) => {
           setExtractedCount(data.membersCount);
@@ -63,7 +67,8 @@ export default function ExtractionScreen() {
     } else if (extractMode === 'admins') {
       extractAdminsMutation.mutate({
         accountId: selectedAccountId,
-        groupId
+        groupId,
+        sessionString
       }, {
         onSuccess: (data: any) => {
           setExtractedCount(data.adminsCount);
@@ -76,7 +81,8 @@ export default function ExtractionScreen() {
     } else {
       extractAllMutation.mutate({
         accountId: selectedAccountId,
-        groupId
+        groupId,
+        sessionString
       }, {
         onSuccess: (data: any) => {
           setExtractedCount(data.membersCount);

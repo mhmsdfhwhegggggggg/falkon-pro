@@ -69,7 +69,7 @@ export const telegramAccounts = pgTable('telegram_accounts', {
   firstName: varchar('first_name', { length: 255 }),
   lastName: varchar('last_name', { length: 255 }),
   username: varchar('username', { length: 255 }),
-  sessionString: text('session_string').notNull(),
+  sessionString: text('session_string'),
   isActive: boolean('is_active').default(true).notNull(),
   isRestricted: boolean('is_restricted').default(false).notNull(),
   restrictionReason: text('restriction_reason'),

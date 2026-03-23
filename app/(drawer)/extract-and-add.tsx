@@ -16,6 +16,7 @@ import { useColors } from "@/hooks/use-colors";
 import { GlassCard } from "@/components/ui/glass-card";
 import { trpc } from '@/lib/trpc';
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { localSessionStore } from '@/lib/local-session-store';
 
 const trpcAny = trpc as any;
 
@@ -64,9 +65,11 @@ export default function ExtractAndAddScreen() {
     }
   }, [jobStatusQuery.data]);
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!accountId) return Alert.alert("تنبيه", "يرجى اختيار حساب أولاً");
     if (!source || !target) return Alert.alert("تنبيه", "يرجى إدخال المصدر والهدف");
+
+    const sessionString = await localSessionStore.getAccountSession(accountId);
 
     startOperationMutation.mutate({
       accountId,
@@ -78,6 +81,7 @@ export default function ExtractAndAddScreen() {
       requireUsername,
       limit: limit ? Number(limit) : undefined,
       delayMs: Number(delayMs),
+      sessionString,
     }, {
       onSuccess: (data: any) => {
         setCurrentJobId(data.jobId);

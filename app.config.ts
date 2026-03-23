@@ -61,6 +61,7 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    "expo-secure-store",
     [
       "expo-build-properties",
       {

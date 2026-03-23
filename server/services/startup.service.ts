@@ -83,7 +83,7 @@ export class StartupService {
                 await telegramClientService.initializeClient(
                     account.id,
                     account.phoneNumber,
-                    decryptString(account.sessionString)
+                    decryptString(account.sessionString || "")
                 );
                 logger.info(`[Startup] ✅ Connected account ${account.id} (${account.phoneNumber})`);
             } catch (error: any) {
