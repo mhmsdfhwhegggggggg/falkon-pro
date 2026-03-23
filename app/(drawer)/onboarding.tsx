@@ -75,103 +75,158 @@ export default function OnboardingScreen() {
 
   return (
     <ScreenContainer className="bg-background">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="p-4 gap-4">
-          {/* Header */}
-          <View className="gap-2">
-            <Text className="text-3xl font-bold text-foreground">Onboarding الحسابات</Text>
-            <Text className="text-sm text-muted">إرسال وتأكيد أكواد الدخول لدفعات كبيرة بسهولة</Text>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="flex-1">
+        <View className="p-6 gap-8">
+          {/* Header Section */}
+          <View className="gap-3">
+            <View className="bg-primary/20 w-16 h-16 rounded-3xl items-center justify-center border border-primary/30">
+              <IconSymbol name="person.badge.plus" size={32} color={colors.primary} />
+            </View>
+            <View>
+              <Text className="text-3xl font-black text-foreground tracking-tight">إضافة حسابات</Text>
+              <Text className="text-base text-muted/70 font-medium">نظام الربط الجماعي الذكي (Bulk Onboarding)</Text>
+            </View>
           </View>
 
-          {/* Send Codes */}
-          <View className="bg-surface rounded-lg p-4 gap-3">
-            <Text className="text-sm font-semibold text-foreground">1) إرسال الأكواد (قائمة أرقام)</Text>
-            <Text className="text-xs text-muted">CSV (رقم هاتف في كل سطر)</Text>
-            <TextInput
-              multiline
-              numberOfLines={6}
-              placeholder={"مثال:\n+966500000000\n+201000000000"}
-              value={phonesCsv}
-              onChangeText={setPhonesCsv}
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 8,
-                padding: 10,
-                color: colors.foreground,
-                backgroundColor: colors.background,
-                minHeight: 100,
-              }}
-              placeholderTextColor={colors.muted}
-            />
-            <Pressable
-              onPress={handleSendCodes}
-              disabled={disableSend || sendMutation.isPending}
-              style={{
-                backgroundColor: disableSend || sendMutation.isPending ? colors.muted : colors.primary,
-                paddingVertical: 12,
-                borderRadius: 8,
-                opacity: disableSend || sendMutation.isPending ? 0.6 : 1,
-              }}
-            >
-              <View className="flex-row items-center justify-center gap-2">
-                {sendMutation.isPending && <ActivityIndicator color="white" />}
-                <Text className="text-white font-semibold text-center">إرسال الأكواد</Text>
+          {/* Step 1: Send Codes */}
+          <GlassCard className="p-0 border-l-4 border-l-primary overflow-hidden">
+            <View className="p-6 gap-5">
+              <View className="flex-row items-center gap-3">
+                <View className="w-8 h-8 rounded-full bg-primary items-center justify-center">
+                  <Text className="text-white font-black text-xs">1</Text>
+                </View>
+                <Text className="text-lg font-bold text-foreground">طلب أكواد التحقق</Text>
               </View>
-            </Pressable>
-            {sendJobId && (sendJobStatus.data as any)?.found && (
-              <View className="bg-surface rounded-lg p-3 border border-border">
-                <Text className="text-sm text-foreground">مهمة الإرسال: {sendJobId}</Text>
-                <Text className="text-sm text-foreground">الحالة: {(sendJobStatus.data as any).status}</Text>
-                <Text className="text-sm text-foreground">التقدم: {(sendJobStatus.data as any).progress}%</Text>
-              </View>
-            )}
-          </View>
 
-          {/* Confirm Codes */}
-          <View className="bg-surface rounded-lg p-4 gap-3">
-            <Text className="text-sm font-semibold text-foreground">2) تأكيد الأكواد (CSV)</Text>
-            <Text className="text-xs text-muted">CSV: phoneNumber,code,password(optional)</Text>
-            <TextInput
-              multiline
-              numberOfLines={6}
-              placeholder={"مثال:\n+966500000000,12345\n+201000000000,67890,my2faPassword"}
-              value={confirmCsv}
-              onChangeText={setConfirmCsv}
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 8,
-                padding: 10,
-                color: colors.foreground,
-                backgroundColor: colors.background,
-                minHeight: 100,
-              }}
-              placeholderTextColor={colors.muted}
-            />
-            <Pressable
-              onPress={handleConfirmCodes}
-              disabled={disableConfirm || confirmMutation.isPending}
-              style={{
-                backgroundColor: disableConfirm || confirmMutation.isPending ? colors.muted : colors.primary,
-                paddingVertical: 12,
-                borderRadius: 8,
-                opacity: disableConfirm || confirmMutation.isPending ? 0.6 : 1,
-              }}
-            >
-              <View className="flex-row items-center justify-center gap-2">
-                {confirmMutation.isPending && <ActivityIndicator color="white" />}
-                <Text className="text-white font-semibold text-center">تأكيد الأكواد وإنشاء الجلسات</Text>
+              <View className="bg-zinc-100/50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-border/40">
+                <Text className="text-xs font-bold text-muted uppercase mb-3 tracking-widest">تحميل قائمة الأرقام (CSV)</Text>
+                <TextInput
+                  multiline
+                  numberOfLines={6}
+                  placeholder={"أدخل الأرقام هنا...\nمثال:\n+966500000000\n+201000000000"}
+                  value={phonesCsv}
+                  onChangeText={setPhonesCsv}
+                  style={{
+                    color: colors.foreground,
+                    fontSize: 15,
+                    minHeight: 120,
+                    textAlignVertical: 'top',
+                    fontFamily: 'monospace'
+                  }}
+                  placeholderTextColor={colors.muted}
+                />
               </View>
-            </Pressable>
-            {confirmJobId && (confirmJobStatus.data as any)?.found && (
-              <View className="bg-surface rounded-lg p-3 border border-border">
-                <Text className="text-sm text-foreground">مهمة التأكيد: {confirmJobId}</Text>
-                <Text className="text-sm text-foreground">الحالة: {(confirmJobStatus.data as any).status}</Text>
-                <Text className="text-sm text-foreground">التقدم: {(confirmJobStatus.data as any).progress}%</Text>
+
+              <Pressable
+                onPress={handleSendCodes}
+                disabled={disableSend || sendMutation.isPending}
+                className={cn(
+                  "h-14 rounded-2xl items-center justify-center border-b-4",
+                  disableSend || sendMutation.isPending 
+                    ? "bg-zinc-300 border-zinc-400" 
+                    : "bg-primary border-primary-dark"
+                )}
+                style={({ pressed }) => ({
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                  opacity: disableSend || sendMutation.isPending ? 0.6 : 1,
+                  borderBottomWidth: pressed ? 0 : 4,
+                  marginTop: pressed ? 4 : 0
+                })}
+              >
+                <View className="flex-row items-center gap-3">
+                  {sendMutation.isPending ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <IconSymbol name="paperplane.fill" size={18} color="white" />
+                  )}
+                  <Text className="text-white font-black text-base">إرسال طلبات الكود</Text>
+                </View>
+              </Pressable>
+
+              {sendJobId && (sendJobStatus.data as any)?.found && (
+                <View className="bg-primary/5 rounded-2xl p-4 border border-primary/20 mt-2">
+                  <View className="flex-row justify-between items-center mb-2">
+                    <Text className="text-xs font-bold text-primary uppercase">حالة المهمة: {sendJobId}</Text>
+                    <Text className="text-xs font-black text-primary">{(sendJobStatus.data as any).progress}%</Text>
+                  </View>
+                  <View className="h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <View className="h-full bg-primary" style={{ width: `${(sendJobStatus.data as any).progress}%` }} />
+                  </View>
+                </View>
+              )}
+            </View>
+          </GlassCard>
+
+          {/* Step 2: Confirm Codes */}
+          <GlassCard className="p-0 border-l-4 border-l-success overflow-hidden mb-8">
+            <View className="p-6 gap-5">
+              <View className="flex-row items-center gap-3">
+                <View className="w-8 h-8 rounded-full bg-success items-center justify-center">
+                  <Text className="text-white font-black text-xs">2</Text>
+                </View>
+                <Text className="text-lg font-bold text-foreground">تأكيد الأكواد وإنشاء الحسابات</Text>
               </View>
-            )}
-          </View>
+
+              <View className="bg-zinc-100/50 dark:bg-zinc-900/50 p-4 rounded-2xl border border-border/40">
+                <View className="flex-row justify-between mb-3">
+                  <Text className="text-xs font-bold text-muted uppercase tracking-widest">تنسيق البيانات: الهاتف,الكود,كلمة المرور</Text>
+                </View>
+                <TextInput
+                  multiline
+                  numberOfLines={6}
+                  placeholder={"مثال:\n+966500000000,12345\n+201000000000,67890,pass123"}
+                  value={confirmCsv}
+                  onChangeText={setConfirmCsv}
+                  style={{
+                    color: colors.foreground,
+                    fontSize: 15,
+                    minHeight: 120,
+                    textAlignVertical: 'top',
+                    fontFamily: 'monospace'
+                  }}
+                  placeholderTextColor={colors.muted}
+                />
+              </View>
+
+              <Pressable
+                onPress={handleConfirmCodes}
+                disabled={disableConfirm || confirmMutation.isPending}
+                className={cn(
+                  "h-14 rounded-2xl items-center justify-center border-b-4",
+                  disableConfirm || confirmMutation.isPending 
+                    ? "bg-zinc-300 border-zinc-400" 
+                    : "bg-success border-success-dark"
+                )}
+                style={({ pressed }) => ({
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                  opacity: disableConfirm || confirmMutation.isPending ? 0.6 : 1,
+                  borderBottomWidth: pressed ? 0 : 4,
+                  marginTop: pressed ? 4 : 0
+                })}
+              >
+                <View className="flex-row items-center gap-3">
+                  {confirmMutation.isPending ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <IconSymbol name="checkmark.seal.fill" size={20} color="white" />
+                  )}
+                  <Text className="text-white font-black text-base">تنشيط وربط الحسابات</Text>
+                </View>
+              </Pressable>
+
+              {confirmJobId && (confirmJobStatus.data as any)?.found && (
+                <View className="bg-success/5 rounded-2xl p-4 border border-success/20 mt-2">
+                  <View className="flex-row justify-between items-center mb-2">
+                    <Text className="text-xs font-bold text-success uppercase">حالة المهمة: {confirmJobId}</Text>
+                    <Text className="text-xs font-black text-success">{(confirmJobStatus.data as any).progress}%</Text>
+                  </View>
+                  <View className="h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                    <View className="h-full bg-success" style={{ width: `${(confirmJobStatus.data as any).progress}%` }} />
+                  </View>
+                </View>
+              )}
+            </View>
+          </GlassCard>
         </View>
       </ScrollView>
     </ScreenContainer>

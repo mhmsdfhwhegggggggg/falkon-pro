@@ -14,6 +14,8 @@ import { ENV } from "./_core/env";
 import { TelegramClientService } from "./services/telegram-client.service";
 import { industrialExtractor } from "./services/industrial-extractor";
 import { highSpeedAdder } from "./services/high-speed-adder";
+import { encryptString } from "./_core/crypto";
+import { getCache } from "./_core/cache-system";
 import * as db from "./db";
 import type {
   JobType,
@@ -40,6 +42,12 @@ const worker = new Worker(
       }
       if (type === "join-groups") {
         return await handleJoinGroups(job);
+      }
+      if (type === "send-login-codes") {
+        return await handleSendLoginCodes(job);
+      }
+      if (type === "confirm-login-codes") {
+        return await handleConfirmLoginCodes(job);
       }
     } catch (error: any) {
       console.error(`[Worker] Job ${job.id} failed: ${error.message}`);
@@ -138,9 +146,66 @@ async function handleExtractAndAdd(job: Job) {
   return { extracted: extractedCount, success, failed };
 }
 
-// Simplified handlers for other types...
-async function handleBulkMessages(job: Job) { /* Implementation */ }
-async function handleJoinGroups(job: Job) { /* Implementation */ }
+async function handleSendLoginCodes(job: Job) {
+  const { phoneNumbers } = job.data as any;
+  const cache = getCache();
+  let success = 0;
+  let failed = 0;
+
+  for (let i = 0; i < phoneNumbers.length; i++) {
+    const phone = phoneNumbers[i];
+    try {
+      const phoneCodeHash = await tg.sendCode(phone);
+      // Store hash in cache for 15 minutes
+      await cache.set(`login_hash:${phone}`, phoneCodeHash, { ttl: 900 });
+      success++;
+    } catch (error: any) {
+      console.error(`[Worker] Failed to send code to ${phone}: ${error.message}`);
+      failed++;
+    }
+    await job.updateProgress(Math.floor(((i + 1) / phoneNumbers.length) * 100));
+  }
+  return { success, failed };
+}
+
+async function handleConfirmLoginCodes(job: Job) {
+  const { userId, items } = job.data as any;
+  const cache = getCache();
+  let success = 0;
+  let failed = 0;
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    try {
+      const phoneCodeHash = await cache.get(`login_hash:${item.phoneNumber}`);
+      if (!phoneCodeHash) throw new Error(`No hash found for ${item.phoneNumber}`);
+
+      const sessionString = await tg.signIn(item.phoneNumber, phoneCodeHash, item.code, item.password);
+      
+      // Encrypt and save to DB
+      const encryptedSession = encryptString(sessionString);
+      
+      await db.createTelegramAccount({
+        userId,
+        phoneNumber: item.phoneNumber,
+        sessionString: encryptedSession,
+        isActive: true,
+        warmingLevel: 0,
+        messagesSentToday: 0,
+        dailyLimit: 100,
+        createdAt: new Date(),
+      } as any);
+
+      await cache.delete(`login_hash:${item.phoneNumber}`);
+      success++;
+    } catch (error: any) {
+      console.error(`[Worker] Failed to confirm code for ${item.phoneNumber}: ${error.message}`);
+      failed++;
+    }
+    await job.updateProgress(Math.floor(((i + 1) / items.length) * 100));
+  }
+  return { success, failed };
+}
 
 worker.on("completed", (job) => console.log(`[Worker] Job ${job.id} completed`));
 worker.on("failed", (job, err) => console.error(`[Worker] Job ${job?.id} failed: ${err.message}`));

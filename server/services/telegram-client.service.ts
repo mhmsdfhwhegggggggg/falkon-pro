@@ -90,6 +90,61 @@ export class TelegramClientService {
   }
 
   /**
+   * Send login code to phone number (Onboarding)
+   */
+  async sendCode(phoneNumber: string): Promise<string> {
+    const credentials = this.getApiCredentials();
+    const client = new TelegramClient(new StringSession(""), credentials.apiId, credentials.apiHash, {
+      connectionRetries: 5,
+    });
+
+    await client.connect();
+    try {
+      const { phoneCodeHash } = await (client as any).sendCode(
+        {
+          apiId: credentials.apiId,
+          apiHash: credentials.apiHash,
+        },
+        phoneNumber
+      );
+      // Wait for a secure disconnection
+      await client.disconnect();
+      return phoneCodeHash;
+    } catch (error) {
+      await client.disconnect();
+      throw error;
+    }
+  }
+
+  /**
+   * Sign in with code (Onboarding)
+   */
+  async signIn(phoneNumber: string, phoneCodeHash: string, code: string, password?: string): Promise<string> {
+    const credentials = this.getApiCredentials();
+    const client = new TelegramClient(new StringSession(""), credentials.apiId, credentials.apiHash, {
+      connectionRetries: 5,
+    });
+
+    await client.connect();
+    try {
+      await client.signIn({
+        phoneNumber,
+        phoneCodeHash,
+        phoneCode: code,
+        password: async () => password || "",
+        onError: (err) => { throw err; }
+      });
+
+      const sessionString = (client.session as any).save() as string;
+      await client.disconnect();
+      return sessionString;
+    } catch (error) {
+      await client.disconnect();
+      throw error;
+    }
+  }
+
+  /**
    * Disconnect client
    */
   async disconnectClient(accountId: number): Promise<void> {

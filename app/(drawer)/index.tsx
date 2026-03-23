@@ -89,7 +89,8 @@ export default function HomeScreen() {
             </View>
             <Image
               source={require("@/assets/images/icon.png")}
-              style={{ width: 60, height: 60, borderRadius: 15 }}
+              className="animate-float"
+              style={{ width: 70, height: 70, borderRadius: 20 }}
             />
           </View>
 
@@ -167,41 +168,46 @@ export default function HomeScreen() {
               الوصول السريع
             </Text>
 
-            <View className="gap-2">
-              {quickActions.map((action) => (
+            <View className="gap-4">
+              {quickActions.map((action, index) => (
                 <TouchableOpacity
                   key={action.id}
                   onPress={() => router.push(action.route as any)}
-                  className="bg-surface rounded-2xl p-4 border border-border active:opacity-70"
-                  style={{ borderLeftWidth: 4, borderLeftColor: action.color }}
+                  activeOpacity={0.7}
                 >
-                  <View className="flex-row items-center gap-4">
-                    <View
-                      className="w-12 h-12 rounded-full items-center justify-center"
-                      style={{ backgroundColor: action.color + "15" }}
-                    >
+                  <GlassCard 
+                    delay={600 + (index * 100)} 
+                    className="p-4 border-l-4" 
+                    style={{ borderLeftColor: action.color }}
+                  >
+                    <View className="flex-row items-center gap-4">
+                      <View
+                        className="w-12 h-12 rounded-2xl items-center justify-center"
+                        style={{ backgroundColor: action.color + "15" }}
+                      >
+                        <IconSymbol
+                          name={action.icon}
+                          size={24}
+                          color={action.color}
+                        />
+                      </View>
+
+                      <View className="flex-1">
+                        <Text className="text-base font-bold text-foreground">
+                          {action.title}
+                        </Text>
+                        <Text className="text-xs text-muted mt-0.5">
+                          {action.subtitle}
+                        </Text>
+                      </View>
+
                       <IconSymbol
-                        name={action.icon}
-                        size={24}
-                        color={action.color}
+                        name="chevron.right"
+                        size={18}
+                        color={colors.muted}
                       />
                     </View>
-
-                    <View className="flex-1">
-                      <Text className="text-base font-semibold text-foreground">
-                        {action.title}
-                      </Text>
-                      <Text className="text-sm text-muted mt-0.5">
-                        {action.subtitle}
-                      </Text>
-                    </View>
-
-                    <IconSymbol
-                      name="chevron.right"
-                      size={20}
-                      color={colors.muted}
-                    />
-                  </View>
+                  </GlassCard>
                 </TouchableOpacity>
               ))}
             </View>
@@ -250,14 +256,14 @@ export default function HomeScreen() {
           </View>
 
           {/* System Status */}
-          <View className="bg-primary/10 border border-primary/20 rounded-2xl p-4 gap-2">
-            <Text className="text-sm font-semibold text-primary">
+          <GlassCard variant="neon" className="p-4 gap-2 animate-pulse-soft">
+            <Text className="text-sm font-bold text-primary">
               🛡️ حماية Anti-Ban: نشطة
             </Text>
-            <Text className="text-xs text-foreground leading-relaxed">
-              النظام يراقب الحسابات حالياً ويقوم بتعديل التأخير تلقائياً لضمان استمرارية العمل 24/7.
+            <Text className="text-xs text-foreground/80 leading-relaxed font-medium">
+              النظام يراقب الحسابات حالياً ويقوم بتعديل التأخير تلقائياً بناءً على سجل النشاط لضمان استمرارية العمل 24/7.
             </Text>
-          </View>
+          </GlassCard>
         </View>
       </ScrollView>
     </ScreenContainer>

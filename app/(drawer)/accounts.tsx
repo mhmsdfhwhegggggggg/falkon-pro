@@ -117,35 +117,44 @@ export default function AccountsScreen() {
                 <GlassCard
                   key={account.id}
                   delay={(index % 10) * 100}
-                  className="p-0"
+                  className={cn(
+                    "p-0 border-l-4",
+                    account.isActive ? "border-l-success" : "border-l-error"
+                  )}
                 >
-                  <View className="p-4 flex-row items-start justify-between">
+                  <View className="p-5 flex-row items-start justify-between">
                     <View className="flex-1">
                       {/* Phone and Status */}
-                      <View className="flex-row items-center gap-2 mb-1">
-                        <Text className="text-lg font-bold text-foreground">
+                      <View className="flex-row items-center gap-3 mb-2">
+                        <Text className="text-xl font-bold text-foreground">
                           {account.phoneNumber}
                         </Text>
-                        <View className={`px-2 py-0.5 rounded-lg ${account.isActive ? "bg-success/10" : "bg-error/10"}`}>
-                          <Text className={`text-[10px] font-bold ${account.isActive ? "text-success" : "text-error"}`}>
-                            {account.isActive ? "نشط" : "مقيد"}
-                          </Text>
+                        <View className={`px-2.5 py-1 rounded-full ${account.isActive ? "bg-success/15" : "bg-error/15"}`}>
+                          <View className="flex-row items-center gap-1.5">
+                            <View className={`w-1.5 h-1.5 rounded-full ${account.isActive ? "bg-success" : "bg-error"}`} />
+                            <Text className={`text-[10px] font-bold uppercase tracking-wider ${account.isActive ? "text-success" : "text-error"}`}>
+                              {account.isActive ? "نشط" : "مقيد"}
+                            </Text>
+                          </View>
                         </View>
                       </View>
 
                       {/* Name/Username */}
-                      <Text className="text-sm text-muted">
+                      <Text className="text-sm font-medium text-muted/80">
                         {account.firstName ? `${account.firstName} ${account.lastName || ""}` : "بدون اسم"}
                         {account.username ? ` (@${account.username})` : ""}
                       </Text>
 
                       {/* Warming Progress */}
-                      <View className="mt-4 gap-1">
-                        <View className="flex-row justify-between items-center">
-                          <Text className="text-[10px] text-muted">مستوى التسخين</Text>
-                          <Text className="text-[10px] font-bold text-primary">{account.warmingLevel}%</Text>
+                      <View className="mt-5 gap-2">
+                        <View className="flex-row justify-between items-end">
+                          <View className="gap-1">
+                            <Text className="text-[10px] font-bold text-muted uppercase tracking-tighter">مستوى التسخين</Text>
+                            <Text className="text-xs font-bold text-primary">آمن وجاهز للعمل</Text>
+                          </View>
+                          <Text className="text-lg font-bold text-foreground">{account.warmingLevel}%</Text>
                         </View>
-                        <View className="h-1.5 bg-background rounded-full overflow-hidden">
+                        <View className="h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
                           <View
                             className="h-full bg-primary"
                             style={{ width: `${account.warmingLevel}%` }}
@@ -154,21 +163,21 @@ export default function AccountsScreen() {
                       </View>
 
                       {/* Stats Row */}
-                      <View className="flex-row items-center gap-4 mt-4">
-                        <View>
-                          <Text className="text-[10px] text-muted">رسائل اليوم</Text>
-                          <Text className="text-sm font-bold text-foreground">{account.messagesSentToday}/{account.dailyLimit}</Text>
+                      <View className="flex-row items-center gap-6 mt-5">
+                        <View className="gap-0.5">
+                          <Text className="text-[10px] font-bold text-muted uppercase">رسائل اليوم</Text>
+                          <Text className="text-sm font-bold text-foreground">{account.messagesSentToday} <Text className="text-muted font-normal">/ {account.dailyLimit}</Text></Text>
                         </View>
-                        <View className="w-[1px] h-6 bg-border" />
-                        <View>
-                          <Text className="text-[10px] text-muted">آخر نشاط</Text>
-                          <Text className="text-sm font-bold text-foreground">منذ قليل</Text>
+                        <View className="w-[1px] h-8 bg-border/60" />
+                        <View className="gap-0.5">
+                          <Text className="text-[10px] font-bold text-muted uppercase">آخر نشاط</Text>
+                          <Text className="text-sm font-bold text-success">نشط الآن</Text>
                         </View>
                       </View>
                     </View>
 
                     {/* Actions */}
-                    <View className="gap-2">
+                    <View className="gap-3">
                       <TouchableOpacity
                         onPress={() => deleteAccountMutation.mutate({ id: account.id }, {
                           onSuccess: () => {
@@ -179,17 +188,17 @@ export default function AccountsScreen() {
                             Alert.alert("خطأ", err.message || "فشل حذف الحساب");
                           }
                         })}
-                        className="w-10 h-10 rounded-xl bg-error/10 items-center justify-center"
+                        className="w-12 h-12 rounded-2xl bg-error/10 items-center justify-center border border-error/20 active:bg-error/20"
                       >
-                        <IconSymbol name="trash.fill" size={18} color={colors.error} />
+                        <IconSymbol name="trash.fill" size={20} color={colors.error} />
                       </TouchableOpacity>
 
                       {!account.isActive && (
                         <TouchableOpacity
                           onPress={() => handleSmartUnban(account.phoneNumber)}
-                          className="w-10 h-10 rounded-xl bg-warning/10 items-center justify-center"
+                          className="w-12 h-12 rounded-2xl bg-warning/10 items-center justify-center border border-warning/20 active:bg-warning/20"
                         >
-                          <IconSymbol name="lifepreserver.fill" size={18} color={colors.warning} />
+                          <IconSymbol name="lifepreserver.fill" size={20} color={colors.warning} />
                         </TouchableOpacity>
                       )}
                     </View>

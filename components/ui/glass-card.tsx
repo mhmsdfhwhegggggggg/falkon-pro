@@ -27,33 +27,32 @@ export function GlassCard({
 
     // Background colors with opacity for "Glass" effect
     const bgColors = {
-        default: 'rgba(255, 255, 255, 0.75)', // Light mode default
-        darkDefault: 'rgba(24, 24, 27, 0.65)', // Zinc-900 with nice transparency
-        neon: 'rgba(139, 92, 246, 0.12)', // Subtle Purple/Neon glow
-        danger: 'rgba(225, 29, 72, 0.12)', // Rose glow
-        success: 'rgba(16, 185, 129, 0.12)', // Emerald glow
+        default: 'transparent', // Use class instead
+        neon: 'rgba(139, 92, 246, 0.15)', // Subtle Purple/Neon glow
+        danger: 'rgba(225, 29, 72, 0.15)', // Rose glow
+        success: 'rgba(16, 185, 129, 0.15)', // Emerald glow
     };
 
     const borderColors = {
-        default: 'rgba(228, 228, 231, 0.6)', // Zinc-200 border
-        darkDefault: 'rgba(255, 255, 255, 0.08)', // Very subtle white border for dark glass
-        neon: 'rgba(139, 92, 246, 0.4)', // Purple accent border
-        danger: 'rgba(244, 63, 94, 0.4)',
-        success: 'rgba(16, 185, 129, 0.4)',
+        default: 'transparent', // Use class instead
+        neon: 'rgba(139, 92, 246, 0.5)', // Purple accent border
+        danger: 'rgba(244, 63, 94, 0.5)',
+        success: 'rgba(16, 185, 129, 0.5)',
     };
 
     return (
         <Animated.View
-            entering={FadeInDown.delay(delay).springify()}
+            entering={FadeInDown.delay(delay).springify().damping(15)}
             className={cn(
-                "rounded-2xl border backdrop-blur-md overflow-hidden",
+                "rounded-3xl border backdrop-blur-xl overflow-hidden shadow-2xl",
+                variant === 'default' ? "glass-premium" : "",
                 className
             )}
             style={[
                 styles.card,
-                {
-                    backgroundColor: variant === 'default' ? bgColors.darkDefault : bgColors[variant],
-                    borderColor: variant === 'default' ? borderColors.darkDefault : borderColors[variant]
+                variant !== 'default' && {
+                    backgroundColor: bgColors[variant],
+                    borderColor: borderColors[variant]
                 },
                 style
             ]}

@@ -380,10 +380,29 @@ export class AntiBanIntegration {
   }
 
   private async getOperationHistory(accountId: number): Promise<OperationHistory> {
-    // سيتم تنفيذها لاحقاً مع جلب البيانات من قاعدة البيانات
-    return {
-      operations: []
-    };
+    try {
+      const { getActivityLogsByAccountId } = await import('../db');
+      const logs = await getActivityLogsByAccountId(accountId, 100);
+      
+      return {
+        operations: logs.map(log => {
+          let details = {};
+          try {
+            details = log.details ? JSON.parse(log.details) : {};
+          } catch (e) {}
+          
+          return {
+            type: (log.action as OperationType) || 'message',
+            success: log.status === 'success',
+            timestamp: log.timestamp,
+            ...details
+          };
+        })
+      };
+    } catch (error) {
+      console.error('Error fetching operation history:', error);
+      return { operations: [] };
+    }
   }
 }
 

@@ -37,70 +37,123 @@ export default function AutoReplyScreen() {
     };
 
     return (
-        <ScreenContainer className="bg-background">
-            <SafeAreaView className="flex-1">
-                <View className="flex-row items-center justify-between p-4 border-b border-border">
-                    <View className="flex-1">
-                        <Text className="text-2xl font-bold text-foreground">الردود التلقائية</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
-                            {(accounts as any)?.map((acc: any) => (
-                                <TouchableOpacity
-                                    key={acc.id}
-                                    onPress={() => setSelectedAccountId(acc.id)}
-                                    className={`mr-2 px-3 py-1 rounded-full border ${selectedAccountId === acc.id ? 'bg-primary border-primary' : 'bg-surface border-border'}`}
-                                >
-                                    <Text className={`text-xs ${selectedAccountId === acc.id ? 'text-white' : 'text-foreground'}`}>{acc.phoneNumber}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
+    <ScreenContainer className="bg-background">
+        <SafeAreaView className="flex-1">
+            {/* Header with Account Selector */}
+            <View className="px-6 py-4 border-b border-border/40">
+                <View className="flex-row items-center justify-between mb-6">
+                    <View>
+                        <Text className="text-3xl font-black text-foreground tracking-tight">الردود التلقائية</Text>
+                        <Text className="text-sm text-muted/70 font-medium">إدارة قواعد الرد الذكي للحسابات</Text>
                     </View>
-                    <TouchableOpacity onPress={() => Alert.alert('قريباً', 'نافذة إنشاء قاعدة جديدة')}>
-                        <IconSymbol name="plus.circle.fill" size={24} color={colors.primary} />
+                    <TouchableOpacity 
+                        onPress={() => Alert.alert('قريباً', 'نافذة إنشاء قاعدة جديدة')}
+                        className="bg-primary/10 p-3 rounded-2xl border border-primary/20"
+                    >
+                        <IconSymbol name="plus" size={24} color={colors.primary} />
                     </TouchableOpacity>
                 </View>
 
-                <View className="flex-row bg-surface border-b border-border">
-                    {[
-                        { key: 'rules', label: 'القواعد', icon: 'list.bullet' },
-                        { key: 'history', label: 'السجل', icon: 'clock' },
-                        { key: 'stats', label: 'الإحصائيات', icon: 'chart.bar' }
-                    ].map((tab) => (
+                <Text className="text-[10px] font-bold text-muted uppercase mb-3 tracking-widest">اختر الحساب</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="gap-3">
+                    {(accounts as any)?.map((acc: any) => (
                         <TouchableOpacity
-                            key={tab.key}
-                            onPress={() => setActiveTab(tab.key as any)}
-                            className={`flex-1 py-3 ${activeTab === tab.key ? 'border-b-2 border-primary' : ''}`}
+                            key={acc.id}
+                            onPress={() => setSelectedAccountId(acc.id)}
+                            className={cn(
+                                "px-4 py-2.5 rounded-2xl border flex-row items-center gap-2",
+                                selectedAccountId === acc.id 
+                                    ? 'bg-primary border-primary shadow-sm shadow-primary/40' 
+                                    : 'bg-zinc-100 dark:bg-zinc-900 border-border/40'
+                            )}
                         >
-                            <View className="items-center">
-                                <IconSymbol name={tab.icon as any} size={20} color={activeTab === tab.key ? colors.primary : colors.muted} />
-                                <Text className={`text-sm mt-1 ${activeTab === tab.key ? 'text-primary' : 'text-muted'}`}>{tab.label}</Text>
-                            </View>
+                            <View className={cn("w-2 h-2 rounded-full", selectedAccountId === acc.id ? "bg-white" : "bg-success")} />
+                            <Text className={cn("text-sm font-bold", selectedAccountId === acc.id ? 'text-white' : 'text-foreground')}>
+                                {acc.phoneNumber}
+                            </Text>
                         </TouchableOpacity>
                     ))}
-                </View>
-
-                <ScrollView contentContainerStyle={{ flexGrow: 1 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-                    {activeTab === 'rules' && (
-                        <View className="p-4">
-                            {rulesQuery.isLoading ? (
-                                <ActivityIndicator size="large" color={colors.primary} />
-                            ) : (
-                                rules?.map((rule: any) => (
-                                    <View key={rule.id} className="bg-surface p-4 rounded-xl border border-border mb-3">
-                                        <View className="flex-row justify-between">
-                                            <Text className="font-semibold text-foreground">{rule.name}</Text>
-                                            <Switch value={rule.isActive} />
-                                        </View>
-                                        <Text className="text-muted mt-2">الكلمات المفتاحية: {rule.keywords.join(', ')}</Text>
-                                    </View>
-                                ))
-                            )}
-                            {!rulesQuery.isLoading && (!rules || rules.length === 0) && (
-                                <Text className="text-center text-muted mt-10">لا توجد قواعد رد تلقائي حالياً</Text>
-                            )}
-                        </View>
-                    )}
                 </ScrollView>
-            </SafeAreaView>
-        </ScreenContainer>
+            </View>
+
+            {/* Tabs Selector */}
+            <View className="flex-row px-6 py-2 gap-2 bg-surface/30">
+                {[
+                    { key: 'rules', label: 'القواعد', icon: 'list.bullet' },
+                    { key: 'history', label: 'السجل', icon: 'clock' },
+                    { key: 'stats', label: 'الإحصائيات', icon: 'chart.bar' }
+                ].map((tab) => (
+                    <TouchableOpacity
+                        key={tab.key}
+                        onPress={() => setActiveTab(tab.key as any)}
+                        className={cn(
+                            "flex-1 flex-row items-center justify-center py-3 gap-2 rounded-2xl",
+                            activeTab === tab.key ? 'bg-primary/10' : ''
+                        )}
+                    >
+                        <IconSymbol name={tab.icon as any} size={18} color={activeTab === tab.key ? colors.primary : colors.muted} />
+                        <Text className={cn("text-xs font-black", activeTab === tab.key ? 'text-primary' : 'text-muted')}>
+                            {tab.label}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {/* Main Content */}
+            <ScrollView 
+                contentContainerStyle={{ flexGrow: 1, padding: 24 }} 
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+            >
+                {!selectedAccountId && (
+                    <View className="flex-1 items-center justify-center py-20 opacity-50">
+                        <IconSymbol name="person.crop.circle.badge.questionmark" size={64} color={colors.muted} />
+                        <Text className="text-base font-bold text-muted mt-4">برجاء اختيار حساب للبدء</Text>
+                    </View>
+                )}
+
+                {selectedAccountId && activeTab === 'rules' && (
+                    <View className="gap-4">
+                        {rulesQuery.isLoading ? (
+                            <ActivityIndicator size="large" color={colors.primary} />
+                        ) : (
+                            rules?.map((rule: any) => (
+                                <GlassCard key={rule.id} className="p-0 border-l-4 border-l-primary">
+                                    <View className="p-5">
+                                        <View className="flex-row justify-between items-start mb-4">
+                                            <View className="gap-1">
+                                                <Text className="text-lg font-bold text-foreground">{rule.name}</Text>
+                                                <Text className="text-xs text-muted font-medium">نظام الرد الذكي مفعّل</Text>
+                                            </View>
+                                            <Switch 
+                                                value={rule.isActive} 
+                                                trackColor={{ false: '#e2e2e7', true: colors.primary + '80' }}
+                                                thumbColor={rule.isActive ? colors.primary : '#f4f4f4'}
+                                            />
+                                        </View>
+                                        
+                                        <View className="bg-zinc-100/50 dark:bg-zinc-900/50 p-3 rounded-xl border border-border/20">
+                                            <Text className="text-[10px] font-bold text-muted uppercase tracking-tighter mb-1">الكلمات المفتاحية</Text>
+                                            <View className="flex-row flex-wrap gap-1.5">
+                                                {rule.keywords.map((kw: string, i: number) => (
+                                                    <View key={i} className="bg-white/80 dark:bg-black/20 px-2 py-0.5 rounded-md border border-border/40">
+                                                        <Text className="text-[10px] font-bold text-foreground">{kw}</Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        </View>
+                                    </View>
+                                </GlassCard>
+                            ))
+                        )}
+                        {!rulesQuery.isLoading && (!rules || rules.length === 0) && (
+                            <View className="items-center py-10">
+                                <Text className="text-center text-muted font-bold">لا توجد قواعد رد تلقائي حالياً</Text>
+                            </View>
+                        )}
+                    </View>
+                )}
+            </ScrollView>
+        </SafeAreaView>
+    </ScreenContainer>
     );
 }

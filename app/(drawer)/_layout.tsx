@@ -12,14 +12,33 @@ export default function DrawerLayout() {
       screenOptions={{
         headerShown: true,
         drawerActiveTintColor: colors.primary,
-        drawerActiveBackgroundColor: colors.primary + '15',
+        drawerActiveBackgroundColor: colors.primary + '18',
         drawerInactiveTintColor: colors.muted,
+        drawerItemStyle: {
+            borderRadius: 16,
+            marginHorizontal: 12,
+            marginVertical: 4,
+        },
+        drawerLabelStyle: {
+            fontFamily: 'Outfit-Medium', // Assuming this font is loaded
+            fontSize: 15,
+        },
         drawerStyle: {
           backgroundColor: colors.background,
-          width: 280,
+          width: 300,
+          borderRightWidth: 1,
+          borderRightColor: colors.border,
         },
         headerStyle: {
           backgroundColor: colors.background,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        },
+        headerTitleStyle: {
+            fontFamily: 'Outfit-Bold',
+            fontSize: 18,
         },
         headerTintColor: colors.text,
         headerTitleAlign: "center",

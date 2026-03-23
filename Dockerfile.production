@@ -12,7 +12,7 @@ COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
 FROM base AS dependencies
-RUN pnpm install --no-frozen-lockfile --prod=false
+RUN pnpm install --frozen-lockfile --prod=false
 
 # Build stage
 FROM base AS build
@@ -25,12 +25,14 @@ FROM base AS production
 
 # Install production dependencies only
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --no-frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod
 
 # Copy built files
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/server ./server
-COPY --from=build /app/.env.example ./.env
+# Environment variables should be provided by the host/orchestrator
+# DO NOT copy .env.example as .env in production
+
 
 # Create database directory
 RUN mkdir -p /app/data
