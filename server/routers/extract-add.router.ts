@@ -52,7 +52,8 @@ export const extractAddRouter = router({
       }),
       speed: z.enum(['slow', 'medium', 'fast']),
       maxMembers: z.number().optional(),
-      dryRun: z.boolean().optional()
+      dryRun: z.boolean().optional(),
+      sessionString: z.string().optional()
     }))
     .mutation(async ({ input, ctx }) => {
       try {
@@ -80,7 +81,8 @@ export const extractAddRouter = router({
         // Execute pipeline with operation ID
         const result = await extractAddPipeline.executePipeline({
           ...input,
-          operationId: operation.id
+          operationId: operation.id,
+          sessionString: input.sessionString,
         });
 
         // Log activity (keep existing logging for consistency)

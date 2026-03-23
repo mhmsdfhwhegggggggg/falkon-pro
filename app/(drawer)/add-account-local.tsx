@@ -29,8 +29,8 @@ export default function AddAccountLocalScreen() {
     setIsLoading(true);
     try {
       // Re-initialize a fresh client for this login attempt
-      const client = LocalTelegramService.getInstance();
-      await client.init(""); // start with empty session
+      const client = new LocalTelegramService();
+      await client.init(); // start with empty session
       
       const hash = await client.sendCode(phoneNumber);
       setPhoneCodeHash(hash);
@@ -47,15 +47,12 @@ export default function AddAccountLocalScreen() {
     
     setIsLoading(true);
     try {
-      const client = LocalTelegramService.getInstance();
+      const client = new LocalTelegramService();
       
+      // 1. Get the session string natively
+      let sessionString = "";
       try {
-        await client.signIn({
-          phoneNumber,
-          phoneCodeHash,
-          phoneCode: code,
-          password: password || undefined
-        });
+         sessionString = await client.signIn(phoneNumber, phoneCodeHash, code, password || undefined) as string;
       } catch (e: any) {
         if (e.message?.includes("SESSION_PASSWORD_NEEDED")) {
           setStep("password");
@@ -65,27 +62,20 @@ export default function AddAccountLocalScreen() {
         throw e;
       }
       
-      // Successfully logged in!
-      // 1. Get the session string natively
-      const sessionString = await client.exportSession();
-      
-      // 2. Fetch basic user details from the Telegram API locally (optional but good for DB)
-      // For now we just send the phone number to TRPC, the server might try to augment later
-      
-      // 3. Register to DB (Without sending the session string to keep it Zero-Knowledge!)
+      // 2. Register to DB (Without sending the session string to keep it Zero-Knowledge!)
       addAccountMutation.mutate({
         phoneNumber,
         sessionString: undefined, // Enforcing Zero-Knowledge DB
       }, {
-        onSuccess: async (dbAccount) => {
-          // 4. Save session locally securely tied to this account ID
+        onSuccess: async (dbAccount: any) => {
+          // 3. Save session locally securely tied to this account ID
           await localSessionStore.saveAccountSession(dbAccount.id, sessionString);
           
           Alert.alert("نجاح", "تم تسجيل الدخول وتخزين الجلسة محلياً بأمان!", [
             { text: "موافق", onPress: () => router.push("/(drawer)/accounts") }
           ]);
         },
-        onError: (err) => {
+        onError: (err: any) => {
           Alert.alert("خطأ", "حدث خطأ أثناء تسجيل الحساب في قاعدة البيانات: " + err.message);
         }
       });

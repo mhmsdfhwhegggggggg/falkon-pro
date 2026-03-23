@@ -108,3 +108,22 @@ export async function removeLocalAccount(phoneNumber: string): Promise<void> {
     }
   } catch(e) {}
 }
+
+export const localSessionStore = {
+  getAccountSession: async (accountId: number | string): Promise<string | undefined> => {
+    const accounts = await getLocalAccounts();
+    const account = accounts.find(a => String(a.id) === String(accountId));
+    if (account && account.phoneNumber) {
+       const session = await getSessionString(account.phoneNumber);
+       return session || undefined;
+    }
+    return undefined;
+  },
+  saveAccountSession: async (accountId: number | string, sessionString: string): Promise<void> => {
+    const accounts = await getLocalAccounts();
+    const account = accounts.find(a => String(a.id) === String(accountId));
+    if (account && account.phoneNumber) {
+      await saveSessionString(account.phoneNumber, sessionString);
+    }
+  }
+};

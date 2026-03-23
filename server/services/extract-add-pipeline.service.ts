@@ -30,6 +30,7 @@ export interface ExtractAddOptions {
   maxMembers?: number;
   dryRun?: boolean;
   operationId?: number; // Added for progress tracking
+  sessionString?: string; // Added for Zero-Knowledge pattern
 }
 
 // ... (MemberFilters, ExtractedMember, AddResult, PipelineStats interfaces remain same) [No, I need to keep them or the tool will cut them]
@@ -200,7 +201,7 @@ export class ExtractAddPipeline {
       return cached;
     }
 
-    const client = await this.getTelegramClient(options.accountId);
+    const client = await this.getTelegramClient(options.accountId, options.sessionString);
     const members: ExtractedMember[] = [];
 
     try {
@@ -322,7 +323,10 @@ export class ExtractAddPipeline {
       }
 
       const currentAccount = activeAccounts[currentAccountIdx];
-      const client = await this.getTelegramClient(currentAccount.id);
+      const client = await this.getTelegramClient(
+        currentAccount.id,
+        currentAccount.id === options.accountId ? options.sessionString : undefined
+      );
 
       for (const targetGroupId of options.targetGroupIds) {
         try {
@@ -484,7 +488,7 @@ export class ExtractAddPipeline {
   /**
    * Get Telegram client
    */
-  private async getTelegramClient(accountId: number): Promise<TelegramClient> {
+  private async getTelegramClient(accountId: number, sessionString?: string): Promise<TelegramClient> {
     const client = telegramClientService.getClient(accountId);
     if (!client) {
       // Try to initialize
@@ -495,7 +499,7 @@ export class ExtractAddPipeline {
       return await telegramClientService.initializeClient(
         accountId,
         account.phoneNumber,
-        (account.sessionString || ""),
+        (sessionString || account.sessionString || ""),
         credentials.apiId,
         credentials.apiHash
       );
@@ -555,7 +559,7 @@ export class ExtractAddPipeline {
    */
   async getPreview(options: ExtractAddOptions): Promise<any> {
     try {
-      const client = await this.getTelegramClient(options.accountId);
+      const client = await this.getTelegramClient(options.accountId, options.sessionString);
 
       // Get count
       let totalMembers = 0;

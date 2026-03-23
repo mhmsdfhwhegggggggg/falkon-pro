@@ -48,10 +48,10 @@ export default function ExtractAndAddScreen() {
 
   // tRPC
   const { data: accounts, isLoading: loadingAccounts } = (trpcAny.accounts.getAll.useQuery(undefined) as any);
-  const startOperationMutation = trpcAny.bulkOps.startExtractAndAdd.useMutation();
+  const startOperationMutation = trpcAny.extractAdd.executePipeline.useMutation();
 
-  const jobStatusQuery = trpc.bulkOps.getJobStatus.useQuery(
-    { jobId: currentJobId || "" },
+  const jobStatusQuery = trpcAny.extractAdd.getPipelineStatus.useQuery(
+    { pipelineId: currentJobId || "" },
     { enabled: !!currentJobId, refetchInterval: 2000 }
   );
 
@@ -73,20 +73,25 @@ export default function ExtractAndAddScreen() {
 
     startOperationMutation.mutate({
       accountId,
-      source,
-      target,
-      extractMode,
-      daysActive: extractMode === 'engaged' ? Number(daysActive) : undefined,
-      excludeBots,
-      requireUsername,
-      limit: limit ? Number(limit) : undefined,
-      delayMs: Number(delayMs),
+      sourceGroupId: source,
+      targetGroupIds: [target],
+      speed: 'medium',
+      filters: {
+        excludeBots,
+        hasUsername: requireUsername,
+        daysActive: extractMode === 'engaged' ? Number(daysActive) : undefined,
+      },
+      maxMembers: limit ? Number(limit) : undefined,
       sessionString,
     }, {
       onSuccess: (data: any) => {
-        setCurrentJobId(data.jobId);
-        setStatus('queued');
-        Alert.alert("نجاح", `تم بد عملية الاستخراج والإضافة (ID: ${data.jobId})`);
+        if (!data.success) {
+           Alert.alert("خطأ", data.message || "فشل بدء العملية");
+           return;
+        }
+        setCurrentJobId(data.operationId?.toString());
+        setStatus('running');
+        Alert.alert("نجاح", `تم بدء عملية الاستخراج والإضافة (ID: ${data.operationId})`);
       },
       onError: (error: any) => {
         Alert.alert("خطأ", error.message || "فشل بدء العملية");
