@@ -14,7 +14,7 @@ const { usePathname } = require('expo-router') as { usePathname: () => string };
 export function LicenseGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const firstSegment = pathname.split('/').filter(Boolean)[0] || '';
-  const { data: licenseStatus, isLoading, error } = trpc.license.getUserLicenses.useQuery({}, {
+  const { data: licenseStatus, isLoading } = trpc.license.getUserLicenses.useQuery({}, {
     // Only fetch if we're not already on the activation screen
     enabled: firstSegment !== 'license-activation' && firstSegment !== 'oauth',
     retry: false,

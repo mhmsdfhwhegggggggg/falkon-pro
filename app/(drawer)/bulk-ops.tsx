@@ -1,5 +1,5 @@
 import { ScrollView, View, Text, Pressable, TextInput, ActivityIndicator, Switch, Alert, TouchableOpacity } from "react-native";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import { ScreenContainer } from "@/components/screen-container";

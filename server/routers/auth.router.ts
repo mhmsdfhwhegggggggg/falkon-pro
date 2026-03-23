@@ -73,7 +73,7 @@ export const authRouter = router({
                 .setExpirationTime("7d")
                 .sign(new TextEncoder().encode(ENV.jwtSecret));
 
-            return { token, user: { id: newUser.id, email: newUser.email, name: newUser.name, role: newUser.role } };
+            return { token, user: { id: newUser.id, email: newUser.email, name: newUser.username, role: newUser.role } };
         }),
 
     logout: publicProcedure

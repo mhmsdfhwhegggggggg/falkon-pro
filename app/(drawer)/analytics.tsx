@@ -3,8 +3,6 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from '@/lib/trpc';
-
-const trpcAny = trpc as any;
 import { IconSymbol } from "@/components/ui/icon-symbol";
 
 /**

@@ -1,11 +1,12 @@
 import { ScrollView, Text, View, TouchableOpacity, ActivityIndicator, Alert, RefreshControl } from "react-native";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { GlassCard } from "@/components/ui/glass-card";
 import { trpc } from "@/lib/trpc";
 import { cn } from "@/lib/utils";
+import { useRouter } from "expo-router";
 
 /**
  * Accounts Screen - Smart Management Edition
@@ -31,7 +32,7 @@ export default function AccountsScreen() {
     setRefreshing(false);
   }, [refetch]);
 
-  const router = require("expo-router").useRouter();
+  const router = useRouter();
   
   const handleAddAccount = () => {
     router.push("/(drawer)/add-account-local");

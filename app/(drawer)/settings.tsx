@@ -1,4 +1,4 @@
-import { ScrollView, View, Text, Pressable, Switch, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
+import { ScrollView, View, Text, Switch, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";

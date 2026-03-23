@@ -35,7 +35,6 @@ export default function ExtractionScreen() {
 
   // Fetch accounts for selection
   const { data: accounts, isLoading: loadingAccounts } = trpcAny.accounts.getAll.useQuery(undefined);
-  const status = trpcAny.setup.getStatus.useQuery(undefined);
 
   const extractAllMutation = trpcAny.extraction.extractAllMembers.useMutation();
 

@@ -21,7 +21,7 @@ export const backupRouter = router({
     deleteBackup: licenseProtectedProcedure
         .input(z.object({ filename: z.string() }))
         .mutation(async ({ input }) => {
-            const success = BackupService.deleteBackup(input.filename);
+            const success = await BackupService.deleteBackup(input.filename);
             return { status: success ? "deleted" : "failed" };
         }),
 });
