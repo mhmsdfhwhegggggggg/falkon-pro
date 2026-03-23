@@ -156,7 +156,7 @@ export default function StatsScreen() {
                     logs.map((log: any, i: number) => (
                       <View
                         key={log.id}
-                        className={`p - 3 flex - row items - center justify - between ${i < logs.length - 1 ? "border-b" : ""} `}
+                        className={`p-3 flex-row items-center justify-between ${i < logs.length - 1 ? "border-b" : ""}`}
                         style={{ borderBottomColor: colors.border, borderBottomWidth: i < logs.length - 1 ? 1 : 0 }}
                       >
                         <View className="flex-1">

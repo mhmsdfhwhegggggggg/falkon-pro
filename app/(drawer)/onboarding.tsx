@@ -19,7 +19,6 @@ export default function OnboardingScreen() {
 
   const confirmMutation = trpc.accounts.bulkConfirmCodes.useMutation();
   const { data: accounts } = (trpcAny.accounts.getAll.useQuery(undefined) as any);
-  const { data: proxies } = (trpcAny.proxies.getAll.useQuery(undefined) as any);
   const sendJobStatus = (trpcAny.bulkOps.getJobStatus.useQuery(
     { jobId: sendJobId || "" },
     { enabled: !!sendJobId, refetchInterval: 1000 }
