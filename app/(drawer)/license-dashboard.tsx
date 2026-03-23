@@ -96,11 +96,11 @@ export default function LicenseDashboardScreen() {
     }, {
       onSuccess: (result: any) => {
         if (result.success) {
-          const { valid, errors, warnings, remainingDays, usageRemaining } = result.validation;
+          const { valid, errors, warnings, daysRemaining, usageRemaining } = result.validation;
 
           if (valid) {
             let message = 'الترخيص صالح ✅';
-            if (remainingDays) message += `\nالأيام المتبقية: ${remainingDays}`;
+            if (daysRemaining) message += `\nالأيام المتبقية: ${daysRemaining}`;
             if (usageRemaining !== undefined) message += `\nالاستخدام المتبقي: ${usageRemaining}`;
             if (warnings.length > 0) message += `\nتحذيرات: ${warnings.join(', ')}`;
 
