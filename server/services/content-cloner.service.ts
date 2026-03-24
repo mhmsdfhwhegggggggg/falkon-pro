@@ -64,7 +64,10 @@ export class ContentClonerService {
     private logger = logger;
 
     constructor() {
-        this.initialize();
+        // Defer initialization to avoid breaking imports on startup errors
+        this.initialize().catch((err) => {
+            this.logger.error('[ContentCloner] Constructor init failed (non-fatal)', { error: err.message });
+        });
     }
 
     public static getInstance(): ContentClonerService {
