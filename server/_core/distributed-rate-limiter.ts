@@ -29,7 +29,14 @@ export interface TokenBucketResult {
 }
 
 export class DistributedRateLimiter {
-  private static redis: Redis;
+  private static redis: Redis | null = null;
+
+  /**
+   * In-memory sliding window store for fallback rate limiting.
+   * Maps key -> array of timestamps (request times).
+   */
+  private static memoryStore: Map<string, number[]> = new Map();
+  private static memoryCleanupInterval: ReturnType<typeof setInterval> | null = null;
   
   /**
    * Initialize with Redis client
@@ -37,6 +44,55 @@ export class DistributedRateLimiter {
   static initialize(redis: Redis): void {
     this.redis = redis;
     console.log('[RateLimiter] Initialized with Redis');
+  }
+
+  private static isRedisAvailable(): boolean {
+    return this.redis !== null;
+  }
+
+  /**
+   * In-memory fallback rate limiter using sliding window algorithm.
+   * Enforces actual limits even when Redis is unavailable.
+   */
+  private static fallbackResult(key: string, limit: number, windowSeconds: number): RateLimitResult {
+    const now = Date.now();
+    const windowMs = windowSeconds * 1000;
+    const fullKey = `fallback:${key}`;
+
+    // Get existing timestamps for this key
+    let timestamps = this.memoryStore.get(fullKey) || [];
+
+    // Remove expired entries outside the window
+    timestamps = timestamps.filter(t => t > now - windowMs);
+
+    const allowed = timestamps.length < limit;
+    if (allowed) {
+      timestamps.push(now);
+    }
+
+    this.memoryStore.set(fullKey, timestamps);
+
+    // Schedule periodic cleanup if not already running
+    if (!this.memoryCleanupInterval) {
+      this.memoryCleanupInterval = setInterval(() => {
+        const cutoff = Date.now();
+        for (const [k, ts] of this.memoryStore.entries()) {
+          const filtered = ts.filter(t => t > cutoff - 3600000); // Keep last hour max
+          if (filtered.length === 0) {
+            this.memoryStore.delete(k);
+          } else {
+            this.memoryStore.set(k, filtered);
+          }
+        }
+      }, 60000); // Cleanup every minute
+    }
+
+    return {
+      allowed,
+      remaining: Math.max(0, limit - timestamps.length),
+      resetAt: timestamps.length > 0 ? timestamps[0] + windowMs : now + windowMs,
+      retryAfter: allowed ? undefined : Math.ceil(((timestamps[0] + windowMs) - now) / 1000),
+    };
   }
   
   /**
@@ -52,12 +108,14 @@ export class DistributedRateLimiter {
     limit: number,
     window: number
   ): Promise<RateLimitResult> {
+    if (!this.isRedisAvailable()) return this.fallbackResult(key, limit, window);
+
     const now = Date.now();
     const windowStart = now - window * 1000;
     const redisKey = `ratelimit:sliding:${key}`;
     
     try {
-      const multi = this.redis.multi();
+      const multi = this.redis!.multi();
       
       // Remove old entries outside the window
       multi.zremrangebyscore(redisKey, 0, windowStart);
@@ -118,6 +176,11 @@ export class DistributedRateLimiter {
     refillRate: number,
     refillInterval: number
   ): Promise<TokenBucketResult> {
+    if (!this.isRedisAvailable()) {
+      const rl = this.fallbackResult(key, capacity, Math.ceil(refillInterval / 1000));
+      return { allowed: rl.allowed, tokens: rl.remaining ?? capacity, refillAt: Date.now() + refillInterval };
+    }
+
     const now = Date.now();
     const redisKey = `ratelimit:bucket:${key}`;
     
@@ -161,7 +224,7 @@ export class DistributedRateLimiter {
         return {allowed and 1 or 0, tokens, nextRefill}
       `;
       
-      const result = await this.redis.eval(
+      const result = await this.redis!.eval(
         script,
         1,
         redisKey,
@@ -201,12 +264,14 @@ export class DistributedRateLimiter {
     limit: number,
     window: number
   ): Promise<RateLimitResult> {
+    if (!this.isRedisAvailable()) return this.fallbackResult(key, limit, window);
+
     const now = Date.now();
     const windowKey = Math.floor(now / (window * 1000));
     const redisKey = `ratelimit:fixed:${key}:${windowKey}`;
     
     try {
-      const multi = this.redis.multi();
+      const multi = this.redis!.multi();
       
       // Increment counter
       multi.incr(redisKey);
@@ -255,6 +320,8 @@ export class DistributedRateLimiter {
     capacity: number,
     leakRate: number
   ): Promise<RateLimitResult> {
+    if (!this.isRedisAvailable()) return this.fallbackResult(key, capacity, 60);
+
     const now = Date.now();
     const redisKey = `ratelimit:leaky:${key}`;
     
@@ -291,7 +358,7 @@ export class DistributedRateLimiter {
         return {allowed and 1 or 0, remaining, resetAt}
       `;
       
-      const result = await this.redis.eval(
+      const result = await this.redis!.eval(
         script,
         1,
         redisKey,
@@ -349,12 +416,18 @@ export class DistributedRateLimiter {
    * Get current usage for a key
    */
   static async getUsage(key: string, window: number): Promise<number> {
+    if (!this.isRedisAvailable()) {
+      const timestamps = this.memoryStore.get(`fallback:${key}`) || [];
+      const windowMs = window * 1000;
+      return timestamps.filter(t => t > Date.now() - windowMs).length;
+    }
+
     const now = Date.now();
     const windowStart = now - window * 1000;
     const redisKey = `ratelimit:sliding:${key}`;
     
     try {
-      const count = await this.redis.zcount(redisKey, windowStart, now);
+      const count = await this.redis!.zcount(redisKey, windowStart, now);
       return count;
     } catch (error) {
       return 0;
@@ -365,10 +438,11 @@ export class DistributedRateLimiter {
    * Reset rate limit for a key
    */
   static async reset(key: string): Promise<void> {
+    if (!this.isRedisAvailable()) return;
     try {
-      const keys = await this.redis.keys(`ratelimit:*:${key}*`);
+      const keys = await this.redis!.keys(`ratelimit:*:${key}*`);
       if (keys.length > 0) {
-        await this.redis.del(...keys);
+        await this.redis!.del(...keys);
       }
     } catch (error: any) {
       console.error('[RateLimiter] Reset error:', error.message);
@@ -380,7 +454,8 @@ export class DistributedRateLimiter {
    */
   static async getAllKeys(pattern: string = '*'): Promise<string[]> {
     try {
-      return await this.redis.keys(`ratelimit:*:${pattern}`);
+      if (!this.isRedisAvailable()) return [];
+      return await this.redis!.keys(`ratelimit:*:${pattern}`);
     } catch (error) {
       return [];
     }
@@ -391,14 +466,15 @@ export class DistributedRateLimiter {
    */
   static async cleanup(): Promise<number> {
     try {
-      const keys = await this.redis.keys('ratelimit:*');
+      if (!this.isRedisAvailable()) return 0;
+      const keys = await this.redis!.keys('ratelimit:*');
       let cleaned = 0;
       
       for (const key of keys) {
-        const ttl = await this.redis.ttl(key);
+        const ttl = await this.redis!.ttl(key);
         if (ttl === -1) {
           // No expiry set, delete it
-          await this.redis.del(key);
+          await this.redis!.del(key);
           cleaned++;
         }
       }

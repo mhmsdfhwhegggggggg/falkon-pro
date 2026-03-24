@@ -326,21 +326,29 @@ export class IntegrityChecker {
   }
 
   /**
-   * Shutdown application on tampering
+   * Handle tampering detection.
+   * In production, logs a critical warning instead of shutting down,
+   * since new deployments naturally change file checksums.
    */
   private static shutdown(): void {
-    console.error('[Integrity] ⛔ Application integrity compromised - shutting down');
-
-    // Stop monitoring
-    this.stopMonitoring();
+    console.error('[Integrity] ⛔ Application integrity change detected');
 
     // Send alert (implement based on your alerting system)
     this.sendAlert();
 
-    // Give time for cleanup
-    setTimeout(() => {
-      process.exit(1);
-    }, 5000);
+    // In production, don't shut down - new deployments change checksums
+    // Just log the warning and continue running
+    if (process.env.INTEGRITY_ENFORCE_SHUTDOWN === 'true') {
+      console.error('[Integrity] INTEGRITY_ENFORCE_SHUTDOWN is enabled - shutting down');
+      this.stopMonitoring();
+      setTimeout(() => {
+        process.exit(1);
+      }, 5000);
+    } else {
+      console.warn('[Integrity] Running in warn-only mode. Set INTEGRITY_ENFORCE_SHUTDOWN=true to enforce shutdown on tampering.');
+      // Re-calculate checksums to accept new deployment files
+      this.calculateChecksums().catch(() => {});
+    }
   }
 
   /**

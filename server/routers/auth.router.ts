@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { SignJWT } from "jose";
 import { ENV } from "../_core/env";
 import { hashPassword, verifyPassword } from "../_core/crypto";
+import { StartupService } from "../services/startup.service";
 
 export const authRouter = router({
     login: publicProcedure
@@ -60,6 +61,9 @@ export const authRouter = router({
                 username: input.name,
                 role: "user",
             } as any).returning();
+
+            // Auto-create trial license for new users
+            await StartupService.ensureTrialLicense(newUser.id);
 
             const token = await new SignJWT({
                 userId: newUser.id,

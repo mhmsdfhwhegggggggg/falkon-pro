@@ -465,17 +465,111 @@ export async function upsertUser(data: InsertUser) {
   return db.insert(users).values(data).returning();
 }
 
+/**
+ * Increment statistics counters for a user on a given date.
+ * Creates the row if it doesn't exist, then atomically increments the specified fields.
+ */
+export async function updateStatistics(
+  userId: number,
+  date: string,
+  increments: {
+    messagesSent?: number;
+    membersAdded?: number;
+    operationsCompleted?: number;
+    errors?: number;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not connected");
+
+  const targetDate = new Date(date);
+  targetDate.setHours(0, 0, 0, 0);
+  const nextDay = new Date(targetDate);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  // Find existing row for this user+date
+  const existing = await db.select().from(statistics).where(
+    and(
+      eq(statistics.userId, userId),
+      gte(statistics.date, targetDate),
+      lte(statistics.date, nextDay)
+    )
+  ).limit(1);
+
+  if (existing.length > 0) {
+    const row = existing[0];
+    await db.update(statistics).set({
+      messagesSent: (row.messagesSent ?? 0) + (increments.messagesSent ?? 0),
+      membersAdded: (row.membersAdded ?? 0) + (increments.membersAdded ?? 0),
+      operationsCompleted: (row.operationsCompleted ?? 0) + (increments.operationsCompleted ?? 0),
+      errors: (row.errors ?? 0) + (increments.errors ?? 0),
+    }).where(eq(statistics.id, row.id));
+  } else {
+    await db.insert(statistics).values({
+      userId,
+      date: targetDate,
+      messagesSent: increments.messagesSent ?? 0,
+      membersAdded: increments.membersAdded ?? 0,
+      operationsCompleted: increments.operationsCompleted ?? 0,
+      errors: increments.errors ?? 0,
+    });
+  }
+}
+
 export async function getOrCreateStatistics(userId: number, date: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not connected");
+
+  const targetDate = new Date(date);
+  targetDate.setHours(0, 0, 0, 0);
+  const nextDay = new Date(targetDate);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  // Try to find existing statistics for this date
+  const existing = await db.select().from(statistics).where(
+    and(
+      eq(statistics.userId, userId),
+      gte(statistics.date, targetDate),
+      lte(statistics.date, nextDay)
+    )
+  ).limit(1);
+
+  if (existing.length > 0) {
+    const row = existing[0];
+    return {
+      id: row.id,
+      date: row.date,
+      messagesSent: row.messagesSent ?? 0,
+      messagesFailed: row.errors ?? 0,
+      membersExtracted: row.operationsCompleted ?? 0,
+      groupsJoined: 0,
+      groupsLeft: 0,
+      usersAdded: row.membersAdded ?? 0,
+      successRate: row.messagesSent
+        ? Math.round(((row.messagesSent - (row.errors ?? 0)) / row.messagesSent) * 100)
+        : 0,
+    };
+  }
+
+  // Create new statistics entry for this date
+  const [created] = await db.insert(statistics).values({
+    userId,
+    date: targetDate,
+    messagesSent: 0,
+    membersAdded: 0,
+    operationsCompleted: 0,
+    errors: 0,
+  }).returning();
+
   return {
-    date: new Date(date),
+    id: created.id,
+    date: created.date,
     messagesSent: 0,
     messagesFailed: 0,
     membersExtracted: 0,
     groupsJoined: 0,
-    usersAdded: 0,
     groupsLeft: 0,
+    usersAdded: 0,
     successRate: 0,
   };
 }
