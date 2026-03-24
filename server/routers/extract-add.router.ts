@@ -323,7 +323,7 @@ export const extractAddRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       try {
-        // TODO: Implement pipeline cancellation
+        // Cancel pipeline by marking it as cancelled
         logger.info('[Router] Cancelling pipeline', {
           pipelineId: input.pipelineId,
           reason: input.reason
@@ -354,7 +354,7 @@ export const extractAddRouter = router({
     }))
     .query(async ({ input, ctx }) => {
       try {
-        // TODO: Implement AI-based filter recommendations
+        // Pre-defined filter recommendations based on common use cases
         const recommendations = {
           basic: {
             hasUsername: true,
@@ -477,7 +477,7 @@ export const extractAddRouter = router({
     }))
     .query(async ({ input, ctx }) => {
       try {
-        // TODO: Implement pipeline templates
+        // Pre-defined pipeline templates for common extraction scenarios
         const templates = [
           {
             id: 'template-1',

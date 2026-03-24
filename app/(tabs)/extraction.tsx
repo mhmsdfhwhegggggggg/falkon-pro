@@ -5,7 +5,6 @@ import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 
-const trpcAny = trpc as any;
 
 /**
  * Extraction Screen - Industrial Edition
@@ -28,14 +27,14 @@ export default function ExtractionScreen() {
   const [limit, setLimit] = useState('5000');
 
   // Fetch accounts for selection
-  const { data: accounts, isLoading: loadingAccounts } = trpcAny.accounts.getAll.useQuery(undefined);
-  const status = trpcAny.setup.getStatus.useQuery(undefined);
+  const { data: accounts, isLoading: loadingAccounts } = trpc.accounts.getAll.useQuery(undefined);
+  const status = trpc.setup.getStatus.useQuery(undefined);
 
-  const extractAllMutation = trpcAny.extraction.extractAllMembers.useMutation();
+  const extractAllMutation = trpc.extraction.extractAllMembers.useMutation();
 
-  const extractEngagedMutation = trpcAny.extraction.extractEngagedMembers.useMutation();
+  const extractEngagedMutation = trpc.extraction.extractEngagedMembers.useMutation();
 
-  const extractAdminsMutation = trpcAny.extraction.extractAdmins.useMutation();
+  const extractAdminsMutation = trpc.extraction.extractAdmins.useMutation();
 
   const handleStartExtraction = () => {
     if (!selectedAccountId) return Alert.alert("تنبيه", "يرجى اختيار حساب أولاً");

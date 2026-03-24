@@ -68,11 +68,14 @@ export default function DeveloperDashboardScreen() {
     notes: '',
   });
 
-  // tRPC queries
-  const { data: statsData, refetch: refetchStats, isLoading: statsLoading } =
+  // tRPC queries (admin-only endpoints - will return FORBIDDEN for non-admin users)
+  const { data: statsData, refetch: refetchStats, isLoading: statsLoading, error: statsError } =
     trpc.permission.getStats.useQuery(undefined);
   const { data: permissionsData, refetch: refetchPermissions, isLoading: permissionsLoading } =
-    trpc.permission.getAllPermissions.useQuery(undefined);
+    trpc.permission.getAllPermissions.useQuery(undefined, { enabled: !statsError });
+
+  // Check if user is not admin (FORBIDDEN error from adminProcedure)
+  const isAccessDenied = statsError?.data?.code === 'FORBIDDEN';
 
   // tRPC mutations
   const createPermission = trpc.permission.createPermission.useMutation();
@@ -471,6 +474,22 @@ export default function DeveloperDashboardScreen() {
       )}
     </View>
   );
+
+  if (isAccessDenied) {
+    return (
+      <ScreenContainer className="bg-background">
+        <View className="flex-1 items-center justify-center p-6">
+          <Text className="text-4xl mb-4">{"\u26D4"}</Text>
+          <Text className="text-xl font-bold text-foreground text-center mb-2">
+            غير مصرح بالوصول
+          </Text>
+          <Text className="text-sm text-muted text-center">
+            هذه اللوحة متاحة فقط للمشرفين. يرجى التواصل مع المسؤول للحصول على صلاحيات.
+          </Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer className="bg-background">

@@ -2,6 +2,8 @@ import { router, licenseProtectedProcedure, publicProcedure } from "../_core/trp
 import { z } from "zod";
 import { ENV } from "../_core/env";
 import { TRPCError } from "@trpc/server";
+import { logger } from "../_core/logger";
+import { closeDb } from "../db";
 
 export const securityRouter = router({
     validateLicense: publicProcedure
@@ -24,8 +26,19 @@ export const securityRouter = router({
     emergencyStop: licenseProtectedProcedure
         .input(z.object({ reason: z.string() }))
         .mutation(async ({ input }) => {
-            console.log(`EMERGENCY STOP TRIGGERED: ${input.reason}`);
-            return { status: "stopped" };
+            logger.fatal(`EMERGENCY STOP TRIGGERED: ${input.reason}`);
+
+            // Actually stop operations by closing DB connections
+            try {
+                await closeDb();
+            } catch (e) {
+                logger.error('[EmergencyStop] Error closing DB:', e);
+            }
+
+            // Set a flag that middleware can check
+            process.env.__EMERGENCY_STOP = 'true';
+
+            return { status: "stopped", reason: input.reason, stoppedAt: new Date().toISOString() };
         }),
 });
 

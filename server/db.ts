@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { Secrets } from "./_core/secrets";
 import { encryptString, decryptString } from "./_core/crypto";
+import { logger } from "./_core/logger";
 import { and, eq, like, gte, lte, desc, asc, sql } from "drizzle-orm";
 export { and, eq, like, gte, lte, desc, asc, sql };
 import {
@@ -69,12 +70,12 @@ export async function getDb() {
     try {
       _client = postgres(url, { max: 20 });
       _db = drizzle(_client, { schema: schemaExports });
-      console.log("[Database] Connected successfully to PostgreSQL:", url.replace(/\/\/.*@/, '//***@'));
+      logger.info("[Database] Connected successfully to PostgreSQL:", url.replace(/\/\/.*@/, '//***@'));
     } catch (error: any) {
       if (error.code === '28P01') {
-        console.error("[Database] AUTHENTICATION FAILED: The password for your database is incorrect. Please check DATABASE_URL in Render dashboard.");
+        logger.error("[Database] AUTHENTICATION FAILED: The password for your database is incorrect. Please check DATABASE_URL in Render dashboard.");
       } else {
-        console.warn("[Database] Failed to connect:", error.message || error);
+        logger.warn("[Database] Failed to connect:", error.message || error);
       }
       _db = null;
       _client = null;
@@ -91,7 +92,7 @@ export async function closeDb() {
     await _client.end();
     _db = null;
     _client = null;
-    console.log("[Database] Connection closed");
+    logger.info("[Database] Connection closed");
   }
 }
 
@@ -398,7 +399,7 @@ export async function getOperationResults(userId: number, since: Date): Promise<
     try {
       details = row.details ? JSON.parse(row.details) : {};
     } catch (e) {
-      console.error("Failed to parse activity log details:", e);
+      logger.error("Failed to parse activity log details:", e);
     }
     return {
       ...row,
@@ -417,7 +418,7 @@ export async function getRecentOperationResults(limit: number): Promise<MappedOp
     try {
       details = row.details ? JSON.parse(row.details) : {};
     } catch (e) {
-      console.error("Failed to parse activity log details:", e);
+      logger.error("Failed to parse activity log details:", e);
     }
     return {
       ...row,

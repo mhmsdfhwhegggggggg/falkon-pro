@@ -1,5 +1,3 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
 import * as crypto from "node:crypto";
 
 type SecretsShape = {
@@ -10,27 +8,15 @@ type SecretsShape = {
   REDIS_URL?: string;
 };
 
-const secretsDir = path.join(process.cwd(), "server");
-const secretsPath = path.join(secretsDir, ".secrets.json");
-
-function ensureFile(): void {
-  if (!fs.existsSync(secretsDir)) fs.mkdirSync(secretsDir, { recursive: true });
-  if (!fs.existsSync(secretsPath)) fs.writeFileSync(secretsPath, JSON.stringify({}, null, 2));
-}
+// In-memory store only - no file I/O for secrets (security fix)
+let _inMemorySecrets: SecretsShape = {};
 
 function readSecrets(): SecretsShape {
-  try {
-    ensureFile();
-    const raw = fs.readFileSync(secretsPath, "utf8");
-    return JSON.parse(raw || "{}") as SecretsShape;
-  } catch {
-    return {};
-  }
+  return { ..._inMemorySecrets };
 }
 
 function writeSecrets(next: SecretsShape) {
-  ensureFile();
-  fs.writeFileSync(secretsPath, JSON.stringify(next, null, 2));
+  _inMemorySecrets = { ...next };
 }
 
 export const Secrets = {

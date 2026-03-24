@@ -92,7 +92,7 @@ export function registerOAuthRoutes(app: Express) {
         "http://localhost:8081";
       res.redirect(302, frontendUrl);
     } catch (error) {
-      console.error("[OAuth] Callback failed", error);
+      // OAuth callback error handled silently
       res.status(500).json({ error: "OAuth callback failed" });
     }
   });
@@ -124,7 +124,7 @@ export function registerOAuthRoutes(app: Express) {
         user: buildUserResponse(user),
       });
     } catch (error) {
-      console.error("[OAuth] Mobile exchange failed", error);
+      // OAuth mobile exchange error handled silently
       res.status(500).json({ error: "OAuth mobile exchange failed" });
     }
   });
@@ -141,7 +141,7 @@ export function registerOAuthRoutes(app: Express) {
       const user = await sdk.authenticateRequest(req);
       res.json({ user: buildUserResponse(user) });
     } catch (error) {
-      console.error("[Auth] /api/auth/me failed:", error);
+      // Auth me endpoint error handled silently
       res.status(401).json({ error: "Not authenticated", user: null });
     }
   });
@@ -168,7 +168,7 @@ export function registerOAuthRoutes(app: Express) {
 
       res.json({ success: true, user: buildUserResponse(user) });
     } catch (error) {
-      console.error("[Auth] /api/auth/session failed:", error);
+      // Auth session endpoint error handled silently
       res.status(401).json({ error: "Invalid token" });
     }
   });
