@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { getDb } from "../db";
+import { redis } from "./queue";
 
 /**
  * Health check endpoint
@@ -13,6 +14,7 @@ export async function healthCheck(req: Request, res: Response) {
     environment: process.env.NODE_ENV || "development",
     checks: {
       database: "unknown",
+      redis: "unknown",
       memory: "ok",
       cpu: "ok",
     },
@@ -27,8 +29,16 @@ export async function healthCheck(req: Request, res: Response) {
       health.checks.database = "error";
       health.status = "degraded";
     }
+  try {
+    if (redis) {
+      const pong = await redis.ping();
+      health.checks.redis = pong === "PONG" ? "ok" : "degraded";
+    } else {
+      health.checks.redis = "error";
+      health.status = "degraded";
+    }
   } catch (error) {
-    health.checks.database = "error";
+    health.checks.redis = "error";
     health.status = "degraded";
   }
 

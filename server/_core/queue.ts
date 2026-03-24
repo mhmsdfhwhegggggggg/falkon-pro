@@ -122,11 +122,17 @@ async function initializeQueue() {
   }
 
   try {
-    connection = new IORedis(redisUrl, {
+    const redisOptions: any = {
       maxRetriesPerRequest: 3,
       enableReadyCheck: false,
       lazyConnect: true,
-    });
+    };
+
+    if (redisUrl.startsWith('rediss://')) {
+      redisOptions.tls = { rejectUnauthorized: false };
+    }
+
+    connection = new IORedis(redisUrl, redisOptions);
 
     // Test connection
     connection.on('error', (err) => {
