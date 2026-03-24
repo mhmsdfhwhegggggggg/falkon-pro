@@ -4,6 +4,9 @@ import { NewMessage } from "telegram/events/index.js";
 import * as db from "../db";
 import { Secrets } from "../_core/secrets";
 import { entityResolver } from "./entity-resolver";
+import { createLogger } from "../_core/logger";
+
+const logger = createLogger('TelegramClient');
 
 export class TelegramClientService {
   private static clients: Map<number, TelegramClient> = new Map();
@@ -14,12 +17,12 @@ export class TelegramClientService {
   async addEventHandler(accountId: number, handler: (event: any) => Promise<void>, eventFilter: any): Promise<void> {
     const client = this.getClient(accountId);
     if (!client) {
-      console.warn(`[TelegramClient] Client not found for account ${accountId}, cannot add handler`);
+      logger.warn(`Client not found for account ${accountId}, cannot add handler`);
       return;
     }
 
     client.addEventHandler(handler, eventFilter);
-    console.log(`[TelegramClient] Added event handler for account ${accountId}`);
+    logger.info(`Added event handler for account ${accountId}`);
   }
 
   /**
@@ -32,7 +35,7 @@ export class TelegramClientService {
       const me = await client.getMe();
       return me as Api.User;
     } catch (error) {
-      console.error('Get Me error:', error);
+      logger.error('Get Me error:', error);
       return null;
     }
   }
@@ -140,7 +143,7 @@ export class TelegramClientService {
         await new Promise(resolve => setTimeout(resolve, 1000));
 
       } catch (error) {
-        console.error('Extraction error:', error);
+        logger.error('Extraction error:', error);
         break;
       }
     }
@@ -164,7 +167,7 @@ export class TelegramClientService {
       });
       return result;
     } catch (error) {
-      console.error('Send message error:', error);
+      logger.error('Send message error:', error);
       throw error;
     }
   }
@@ -187,7 +190,7 @@ export class TelegramClientService {
       }));
       return true;
     } catch (error) {
-      console.error('Send reaction error:', error);
+      logger.error('Send reaction error:', error);
       return false;
     }
   }
@@ -208,7 +211,7 @@ export class TelegramClientService {
       } as any);
       return true;
     } catch (error) {
-      console.error('Delete message error:', error);
+      logger.error('Delete message error:', error);
       // Fallback for non-channel chats
       try {
         const messageIds = Array.isArray(messageId) ? messageId : [messageId];
@@ -219,7 +222,7 @@ export class TelegramClientService {
         } as any);
         return true;
       } catch (e) {
-        console.error('Fallback delete message error:', e);
+        logger.error('Fallback delete message error:', e);
         throw error;
       }
     }
@@ -240,7 +243,7 @@ export class TelegramClientService {
       } as any);
       return true;
     } catch (error) {
-      console.error('Mark as read error:', error);
+      logger.error('Mark as read error:', error);
       throw error;
     }
   }
@@ -260,7 +263,7 @@ export class TelegramClientService {
       } as any);
       return (result as any).participant;
     } catch (error) {
-      console.error('Get participant info error:', error);
+      logger.error('Get participant info error:', error);
       return null;
     }
   }
@@ -282,7 +285,7 @@ export class TelegramClientService {
       }
       return true;
     } catch (error) {
-      console.error('Join group error:', error);
+      logger.error('Join group error:', error);
       return false;
     }
   }
@@ -304,7 +307,7 @@ export class TelegramClientService {
       }));
       return true;
     } catch (error) {
-      console.error('Add user error:', error);
+      logger.error('Add user error:', error);
       return false;
     }
   }
@@ -378,7 +381,7 @@ export class TelegramClientService {
         await new Promise(resolve => setTimeout(resolve, 800));
 
       } catch (error) {
-        console.error('Extraction error:', error);
+        logger.error('Extraction error:', error);
         break;
       }
     }
@@ -424,7 +427,7 @@ export class TelegramClientService {
 
         await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (error) {
-        console.error('Admin extraction error:', error);
+        logger.error('Admin extraction error:', error);
         break;
       }
     }
@@ -450,18 +453,18 @@ export class TelegramClientService {
         // Respect the delay
         await new Promise(resolve => setTimeout(resolve, delayMs));
       } catch (error: any) {
-        console.error(`[TelegramClient] Failed to send message to ${userId}:`, error);
+        logger.error(`Failed to send message to ${userId}:`, error);
 
         // Handle Flood Wait
         if (error.seconds) {
-          console.warn(`[TelegramClient] Flood wait for ${error.seconds} seconds. Pausing...`);
+          logger.warn(`Flood wait for ${error.seconds} seconds. Pausing...`);
           await new Promise(resolve => setTimeout(resolve, error.seconds * 1000 + 1000));
           // Retry once after wait
           try {
             await client.sendMessage(String(userId), { message });
             success++;
           } catch (retryError) {
-            console.error(`[TelegramClient] Retry failed for ${userId}:`, retryError);
+            logger.error(`Retry failed for ${userId}:`, retryError);
             failed++;
           }
         } else {

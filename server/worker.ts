@@ -146,6 +146,14 @@ async function handleExtractAndAdd(job: Job) {
     } as any);
   }
 
+  // 5. Update statistics table
+  const today = new Date().toISOString().split('T')[0];
+  await db.updateStatistics(account.userId, today, {
+    membersAdded: success,
+    operationsCompleted: 1,
+    errors: failed,
+  });
+
   return { extracted: extractedCount, success, failed };
 }
 
@@ -315,6 +323,14 @@ async function handleBulkMessages(job: Job) {
     status: "success",
   });
 
+  // Update statistics table
+  const today = new Date().toISOString().split('T')[0];
+  await db.updateStatistics(account.userId, today, {
+    messagesSent: success,
+    errors: failed,
+    operationsCompleted: 1,
+  });
+
   await tg.disconnectClient(p.accountId);
   return { success, failed, total: p.userIds.length };
 }
@@ -381,6 +397,13 @@ async function handleJoinGroups(job: Job) {
     action: "groups_joined",
     details: JSON.stringify({ success, failed, total: p.groupLinks.length }),
     status: "success",
+  });
+
+  // Update statistics table
+  const today = new Date().toISOString().split('T')[0];
+  await db.updateStatistics(account.userId, today, {
+    operationsCompleted: success,
+    errors: failed,
   });
 
   await tg.disconnectClient(p.accountId);

@@ -32,8 +32,6 @@ RUN pnpm install --no-frozen-lockfile --prod
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/drizzle ./drizzle
-COPY drizzle.config.ts ./
 
 # Expose port
 EXPOSE 3000
