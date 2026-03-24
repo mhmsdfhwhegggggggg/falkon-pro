@@ -5,7 +5,7 @@
 
 import crypto from 'crypto';
 import { encryptString, decryptString } from '../_core/crypto';
-import { db, licenses } from '../db';
+import { getDb, licenses } from '../db';
 import { eq, and, or, desc } from 'drizzle-orm';
 
 export interface License {
@@ -99,11 +99,13 @@ export class LicenseManager {
   }): Promise<License> {
     const licenseType = input.type as License['type'];
     
-    const [newLicense] = await db.insert(licenses).values({
+    const database = await getDb();
+    if (!database) throw new Error('Database not connected');
+    const [newLicense] = await database.insert(licenses).values({
       userId: input.userId,
       licenseKey: this.generateLicenseKey(),
       type: licenseType,
-      status: 'pending',
+      status: 'active',
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + input.durationDays * 24 * 60 * 60 * 1000),
       maxAccounts: input.maxAccounts || this.getMaxAccountsForType(licenseType),
@@ -121,7 +123,9 @@ export class LicenseManager {
    * Activate license
    */
   async activateLicense(key: string, hardwareId?: string): Promise<boolean> {
-    const license = await db.query.licenses.findFirst({
+    const database = await getDb();
+    if (!database) throw new Error('Database not connected');
+    const license = await database.query.licenses.findFirst({
       where: eq(licenses.licenseKey, key)
     });
 
@@ -134,7 +138,7 @@ export class LicenseManager {
     }
 
     // Update license
-    await db.update(licenses).set({
+    await database.update(licenses).set({
       status: 'active',
       activatedAt: new Date(),
       lastValidated: new Date(),
@@ -151,13 +155,15 @@ export class LicenseManager {
    * Deactivate license
    */
   async deactivateLicense(key: string): Promise<boolean> {
-    const license = await db.query.licenses.findFirst({
+    const database = await getDb();
+    if (!database) throw new Error('Database not connected');
+    const license = await database.query.licenses.findFirst({
       where: eq(licenses.licenseKey, key)
     });
 
     if (!license) return false;
 
-    await db.update(licenses).set({
+    await database.update(licenses).set({
       status: 'pending',
       hardwareId: null
     }).where(eq(licenses.id, license.id));
@@ -173,7 +179,9 @@ export class LicenseManager {
       return { valid: false, reason: 'No license key provided', errors: ['No license key provided'], warnings: [] };
     }
 
-    const license = await db.query.licenses.findFirst({
+    const database = await getDb();
+    if (!database) throw new Error('Database not connected');
+    const license = await database.query.licenses.findFirst({
       where: eq(licenses.licenseKey, key)
     });
 
@@ -185,7 +193,7 @@ export class LicenseManager {
 
     // Check expiration
     if (license.expiresAt && license.expiresAt < new Date()) {
-      await db.update(licenses).set({ status: 'expired' }).where(eq(licenses.id, license.id));
+      await database.update(licenses).set({ status: 'expired' }).where(eq(licenses.id, license.id));
       return { valid: false, reason: 'License expired', errors: ['License expired'], warnings: [] };
     }
 
@@ -195,7 +203,7 @@ export class LicenseManager {
     }
 
     // Update last validated
-    await db.update(licenses).set({ lastValidated: new Date() }).where(eq(licenses.id, license.id));
+    await database.update(licenses).set({ lastValidated: new Date() }).where(eq(licenses.id, license.id));
 
     const daysRemaining = license.expiresAt ? Math.ceil(
       (license.expiresAt.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
@@ -239,7 +247,9 @@ export class LicenseManager {
    * Get current license info (Helper for context)
    */
   async getLicenseByKey(key: string): Promise<License | null> {
-    const license = await db.query.licenses.findFirst({
+    const database = await getDb();
+    if (!database) throw new Error('Database not connected');
+    const license = await database.query.licenses.findFirst({
       where: eq(licenses.licenseKey, key)
     });
     return (license as unknown as License) || null;
@@ -252,7 +262,9 @@ export class LicenseManager {
       return cached.license;
     }
 
-    const license = await db.query.licenses.findFirst({
+    const database = await getDb();
+    if (!database) throw new Error('Database not connected');
+    const license = await database.query.licenses.findFirst({
       where: eq(licenses.userId, userId)
     });
 
@@ -303,9 +315,11 @@ export class LicenseManager {
   }
 
   async trackUsage(licenseKey: string, action: string, metadata: any): Promise<void> {
-    const license = await db.query.licenses.findFirst({ where: eq(licenses.licenseKey, licenseKey) });
+    const database = await getDb();
+    if (!database) return;
+    const license = await database.query.licenses.findFirst({ where: eq(licenses.licenseKey, licenseKey) });
     if (license) {
-      await db.update(licenses).set({
+      await database.update(licenses).set({
         usageCount: license.usageCount + 1
       }).where(eq(licenses.id, license.id));
     }
@@ -320,13 +334,15 @@ export class LicenseManager {
   }
 
   async extendLicense(licenseKey: string, days: number): Promise<boolean> {
-    const license = await db.select().from(licenses).where(eq(licenses.licenseKey, licenseKey)).limit(1);
+    const database = await getDb();
+    if (!database) throw new Error('Database not connected');
+    const license = await database.select().from(licenses).where(eq(licenses.licenseKey, licenseKey)).limit(1);
     if (license.length === 0) return false;
 
     const currentExpiry = license[0].expiresAt ? new Date(license[0].expiresAt) : new Date();
     const newExpiry = new Date(currentExpiry.getTime() + days * 24 * 60 * 60 * 1000);
 
-    await db.update(licenses)
+    await database.update(licenses)
       .set({ expiresAt: newExpiry, status: 'active' })
       .where(eq(licenses.id, license[0].id));
 
@@ -334,7 +350,9 @@ export class LicenseManager {
   }
 
   async getLicenseAnalytics(): Promise<any> {
-    const all = await db.select().from(licenses);
+    const database = await getDb();
+    if (!database) throw new Error('Database not connected');
+    const all = await database.select().from(licenses);
     
     return {
       total: all.length,

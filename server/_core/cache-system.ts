@@ -16,6 +16,7 @@
 
 import Redis from 'ioredis';
 import { LRUCache } from 'lru-cache';
+import { logger } from './logger';
 
 export interface CacheOptions {
   ttl?: number;           // Time to live in seconds
@@ -122,7 +123,7 @@ export class CacheSystem {
       return null;
 
     } catch (error: any) {
-      console.error('[Cache] Error getting value:', error.message);
+      logger.error('[Cache] Error getting value:', error.message);
       this.metrics.misses++;
       return null;
     }
@@ -160,7 +161,7 @@ export class CacheSystem {
       this.metrics.sets++;
 
     } catch (error: any) {
-      console.error('[Cache] Error setting value:', error.message);
+      logger.error('[Cache] Error setting value:', error.message);
     }
   }
 
@@ -182,7 +183,7 @@ export class CacheSystem {
       this.metrics.deletes++;
 
     } catch (error: any) {
-      console.error('[Cache] Error deleting value:', error.message);
+      logger.error('[Cache] Error deleting value:', error.message);
     }
   }
 
@@ -249,7 +250,7 @@ export class CacheSystem {
         });
 
       } catch (error: any) {
-        console.error('[Cache] Error getting multiple values:', error.message);
+        logger.error('[Cache] Error getting multiple values:', error.message);
       }
     }
 
@@ -286,7 +287,7 @@ export class CacheSystem {
       this.metrics.sets += entries.length;
 
     } catch (error: any) {
-      console.error('[Cache] Error setting multiple values:', error.message);
+      logger.error('[Cache] Error setting multiple values:', error.message);
     }
   }
 
@@ -319,7 +320,7 @@ export class CacheSystem {
       this.metrics.deletes += deleted;
 
     } catch (error: any) {
-      console.error('[Cache] Error invalidating by tags:', error.message);
+      logger.error('[Cache] Error invalidating by tags:', error.message);
     }
 
     return deleted;
@@ -351,10 +352,10 @@ export class CacheSystem {
         }
       }
 
-      console.log('[Cache] Cache cleared');
+      logger.info('[Cache] Cache cleared');
 
     } catch (error: any) {
-      console.error('[Cache] Error clearing cache:', error.message);
+      logger.error('[Cache] Error clearing cache:', error.message);
     }
   }
 
@@ -389,9 +390,9 @@ export class CacheSystem {
     entries: Array<{ key: string; value: T }>,
     options: CacheOptions = {}
   ): Promise<void> {
-    console.log(`[Cache] Warming cache with ${entries.length} entries...`);
+    logger.info(`[Cache] Warming cache with ${entries.length} entries...`);
     await this.mset(entries, options);
-    console.log('[Cache] Cache warmed');
+    logger.info('[Cache] Cache warmed');
   }
 
   /**
@@ -479,7 +480,7 @@ export class CacheSystem {
       await pipeline.exec();
 
     } catch (error: any) {
-      console.error('[Cache] Error storing tags:', error.message);
+      logger.error('[Cache] Error storing tags:', error.message);
     }
   }
 
@@ -499,7 +500,7 @@ export class CacheSystem {
  */
 export function initializeCacheSystem(redis: Redis): CacheSystem {
   const cache = CacheSystem.getInstance(redis);
-  console.log('[Cache] Cache system initialized');
+  logger.info('[Cache] Cache system initialized');
   return cache;
 }
 

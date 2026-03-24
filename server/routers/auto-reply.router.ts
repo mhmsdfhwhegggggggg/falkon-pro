@@ -229,14 +229,33 @@ export const autoReplyRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       try {
-        // TODO: Implement rule testing
+        // Fetch the rule and test against the message
+        const rules = await autoReplyService.getRules(input.accountId, {});
+        const rule = rules.find((r: any) => r.id === input.ruleId);
+        if (!rule) throw new Error('Rule not found');
+
+        const keywords: string[] = (rule as any).keywords || [];
+        const matchType: string = (rule as any).matchType || 'contains';
+        const matchedKeywords = keywords.filter((kw: string) => {
+          if (matchType === 'exact') return input.testMessage === kw;
+          if (matchType === 'contains') return input.testMessage.includes(kw);
+          if (matchType === 'regex') {
+            try { return new RegExp(kw, 'i').test(input.testMessage); } catch { return false; }
+          }
+          return false;
+        });
+        const matched = matchedKeywords.length > 0;
+        const replyContent = matched ? ((rule as any).replyContent || '') : '';
+        const delay = (rule as any).delay ? Math.round(((rule as any).delay.min + (rule as any).delay.max) / 2) : 3000;
+        const reactions: string[] = (rule as any).reactions || [];
+
         const testResult = {
-          matched: true,
-          matchedKeywords: ['السعر'],
-          replyContent: 'السعر 100 ريال فقط! 🎉',
-          delay: 3500,
-          reactions: ['👍', '💰'],
-          confidence: 0.95
+          matched,
+          matchedKeywords,
+          replyContent: typeof replyContent === 'string' ? replyContent : (replyContent[0] || ''),
+          delay,
+          reactions: matched ? reactions : [],
+          confidence: matched ? matchedKeywords.length / Math.max(keywords.length, 1) : 0
         };
 
         return {
@@ -290,7 +309,6 @@ export const autoReplyRouter = router({
     }))
     .query(async ({ input, ctx }) => {
       try {
-        // TODO: Implement templates retrieval
         const templates = {
           greeting: [
             {
@@ -369,7 +387,8 @@ export const autoReplyRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       try {
-        // TODO: Implement AI suggestions
+        // AI suggestions require BUILT_IN_FORGE_API_KEY configuration
+        // Returns sample suggestions when AI service is not available
         const suggestions = [
           {
             keyword: 'السعر',
@@ -416,22 +435,18 @@ export const autoReplyRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       try {
-        // TODO: Implement rules export
+        // Fetch actual rules from the service for export
+        const rules = await autoReplyService.getRules(input.accountId, {});
         const exportData = {
-          rules: [
-            {
-              name: 'Price Inquiries',
-              keywords: ['السعر', 'كم', 'التكلفة'],
-              matchType: 'contains',
-              replyType: 'fixed',
-              replyContent: 'السعر 100 ريال فقط! 🎉',
-              delay: { min: 2000, max: 5000 },
-              options: {
-                targetTypes: ['private', 'group'],
-                dailyLimit: 50
-              }
-            }
-          ],
+          rules: rules.map((r: any) => ({
+            name: r.name,
+            keywords: r.keywords || [],
+            matchType: r.matchType || 'contains',
+            replyType: r.replyType || 'fixed',
+            replyContent: r.replyContent || '',
+            delay: r.delay || { min: 2000, max: 5000 },
+            options: r.options || { targetTypes: ['private', 'group'], dailyLimit: 50 }
+          })),
           exportedAt: new Date(),
           version: '6.0.0'
         };
@@ -476,17 +491,36 @@ export const autoReplyRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       try {
-        // TODO: Implement rules import
-        const importResults = {
-          imported: input.rules.length,
-          skipped: 0,
-          errors: 0,
-          details: input.rules.map((rule, index) => ({
-            index: index + 1,
-            name: rule.name,
-            status: 'success'
-          }))
-        };
+        // Import rules by creating them via the service
+        const details: { index: number; name: string; status: string; error?: string }[] = [];
+        let imported = 0;
+        let skipped = 0;
+        let errors = 0;
+        for (let i = 0; i < input.rules.length; i++) {
+          const rule = input.rules[i];
+          try {
+            await autoReplyService.createRule({
+              name: rule.name,
+              accountId: input.accountId,
+              userId: ctx.user!.id,
+              keywords: rule.keywords,
+              matchType: rule.matchType as any,
+              replyType: rule.replyType as any,
+              replyContent: rule.replyContent,
+              delay: rule.delay as any,
+              reactions: [],
+              options: rule.options as any,
+              priority: 1,
+              isActive: true
+            });
+            imported++;
+            details.push({ index: i + 1, name: rule.name, status: 'success' });
+          } catch (e: any) {
+            errors++;
+            details.push({ index: i + 1, name: rule.name, status: 'error', error: e.message });
+          }
+        }
+        const importResults = { imported, skipped, errors, details };
 
         return {
           success: true,

@@ -7,6 +7,7 @@ import { TelegramClient } from 'telegram';
 import { Api } from 'telegram';
 import { antiBanDistributed } from './anti-ban-distributed';
 import { getCache } from '../_core/cache-system';
+import { logger } from '../_core/logger';
 
 export interface IndustrialFilters {
   activityDays?: number;
@@ -43,7 +44,7 @@ export class IndustrialExtractor {
     const check = await antiBanDistributed.canPerformOperation(accountId, 'extract');
     if (!check.allowed) throw new Error(`Industrial Safety: ${check.reason}`);
 
-    console.log(`[IndustrialExtractor] Starting massive extraction for ${sourceId}...`);
+    logger.info(`[IndustrialExtractor] Starting massive extraction for ${sourceId}...`);
 
     try {
       // 2. Resolve Entity with fallback logic
@@ -51,7 +52,7 @@ export class IndustrialExtractor {
       try {
         target = await client.getEntity(sourceId);
       } catch (e) {
-        console.log(`[IndustrialExtractor] Fallback to getInputEntity for ${sourceId}`);
+        logger.info(`[IndustrialExtractor] Fallback to getInputEntity for ${sourceId}`);
         target = await client.getInputEntity(sourceId);
       }
 
@@ -111,7 +112,7 @@ export class IndustrialExtractor {
 
           // 6. Progress Update
           if (count % 1000 === 0) {
-            console.log(`[IndustrialExtractor] Extracted ${count} members...`);
+            logger.info(`[IndustrialExtractor] Extracted ${count} members...`);
           }
 
           // 7. Smart Delay
@@ -119,7 +120,7 @@ export class IndustrialExtractor {
 
         } catch (error: any) {
           consecutiveErrors++;
-          console.error(`[IndustrialExtractor] Extraction error: ${error.message}`);
+          logger.error(`[IndustrialExtractor] Extraction error: ${error.message}`);
 
           if (consecutiveErrors >= 3) {
             throw new Error(`Industrial extraction failed after ${consecutiveErrors} consecutive errors`);
@@ -130,11 +131,11 @@ export class IndustrialExtractor {
         }
       }
 
-      console.log(`[IndustrialExtractor] Extraction completed: ${count} members`);
+      logger.info(`[IndustrialExtractor] Extraction completed: ${count} members`);
       return count;
 
     } catch (error) {
-      console.error(`[IndustrialExtractor] Industrial extraction failed:`, error);
+      logger.error(`[IndustrialExtractor] Industrial extraction failed:`, error);
       throw error;
     }
   }

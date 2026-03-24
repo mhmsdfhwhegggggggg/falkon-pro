@@ -30,16 +30,9 @@ const GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserI
 
 class OAuthService {
   constructor(private client: ReturnType<typeof axios.create>) {
-    console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
-    // Skip OAuth validation for development
-    if (ENV.isDevelopment) {
-      console.log("[OAuth] WARNING: OAuth validation disabled in development mode");
+    // Skip OAuth validation when URL not configured or in development
+    if (!ENV.oAuthServerUrl || ENV.isDevelopment) {
       return;
-    }
-    if (!ENV.oAuthServerUrl) {
-      console.error(
-        "[OAuth] ERROR: OAUTH_SERVER_URL is not configured! Set OAUTH_SERVER_URL environment variable.",
-      );
     }
   }
 
@@ -189,7 +182,6 @@ class SDKServer {
     cookieValue: string | undefined | null,
   ): Promise<{ openId: string; appId: string; name: string } | null> {
     if (!cookieValue) {
-      console.warn("[Auth] Missing session cookie");
       return null;
     }
 
@@ -201,7 +193,6 @@ class SDKServer {
       const { openId, appId, name } = payload as Record<string, unknown>;
 
       if (!isNonEmptyString(openId) || !isNonEmptyString(appId) || !isNonEmptyString(name)) {
-        console.warn("[Auth] Session payload missing required fields");
         return null;
       }
 
@@ -211,7 +202,6 @@ class SDKServer {
         name,
       };
     } catch (error) {
-      console.warn("[Auth] Session verification failed for token:", cookieValue?.substring(0, 10) + "...", String(error));
       return null;
     }
   }
@@ -241,11 +231,9 @@ class SDKServer {
   async authenticateRequest(req: Request): Promise<User> {
     // Regular authentication flow
     const authHeader = req.headers.authorization || req.headers.Authorization;
-    console.log('[Auth] Auth Header:', authHeader ? 'Present' : 'Missing', typeof authHeader);
     let token: string | undefined;
     if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
       token = authHeader.slice("Bearer ".length).trim();
-      console.log('[Auth] Bearer token extracted:', token.substring(0, 10) + '...');
     }
 
     const cookies = this.parseCookies(req.headers.cookie);
@@ -271,13 +259,11 @@ class SDKServer {
     if (user) {
       this.userCache.set(sessionCookie ?? "", { user: user as any, timestamp: now });
     } else {
-      console.warn("[Auth] User not found in DB for sessionUserId:", sessionUserId);
     }
 
     // If user not in DB, sync from OAuth server automatically
     if (!user) {
       if (ENV.isDevelopment) {
-        console.warn(`[Auth] User ${sessionUserId} not found in DB. Skipping OAuth sync in dev mode.`);
         throw ForbiddenError("User not found in local database (Dev Mode)");
       }
       try {
@@ -291,7 +277,6 @@ class SDKServer {
         });
         user = await db.getUserByEmail(email);
       } catch (error) {
-        console.error("[Auth] Failed to sync user from OAuth:", error);
         throw ForbiddenError("Failed to sync user info");
       }
     }

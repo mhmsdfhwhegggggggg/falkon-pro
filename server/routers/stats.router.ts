@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { router, licenseProtectedProcedure, adminProcedure } from "../_core/trpc";
 import * as db from "../db";
+import { logger } from "../_core/logger";
 
 /**
  * Statistics Router
@@ -41,7 +42,7 @@ export const statsRouter = router({
           },
         };
       } catch (error) {
-        console.error("Failed to get daily stats:", error);
+        logger.error("Failed to get daily stats:", error);
         throw new Error("Failed to get daily stats");
       }
     }),
@@ -82,7 +83,7 @@ export const statsRouter = router({
           },
         };
       } catch (error) {
-        console.error("Failed to get today stats:", error);
+        logger.error("Failed to get today stats:", error);
         throw new Error("Failed to get today stats");
       }
     }),
@@ -119,7 +120,7 @@ export const statsRouter = router({
           })),
         };
       } catch (error) {
-        console.error("Failed to get activity logs:", error);
+        logger.error("Failed to get activity logs:", error);
         throw new Error("Failed to get activity logs");
       }
     }),
@@ -166,7 +167,7 @@ export const statsRouter = router({
           },
         };
       } catch (error) {
-        console.error("Failed to get account overview:", error);
+        logger.error("Failed to get account overview:", error);
         throw new Error("Failed to get account overview");
       }
     }),
@@ -206,7 +207,7 @@ export const statsRouter = router({
           },
         };
       } catch (error) {
-        console.error("Failed to get performance metrics:", error);
+        logger.error("Failed to get performance metrics:", error);
         throw new Error("Failed to get performance metrics");
       }
     }),

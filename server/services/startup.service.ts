@@ -56,8 +56,7 @@ export class StartupService {
         let password = process.env.ADMIN_PASSWORD;
         if (!password) {
             password = crypto.randomBytes(24).toString('base64url');
-            logger.warn(`[Startup] No ADMIN_PASSWORD set. Generated random password for admin: ${password}`);
-            logger.warn('[Startup] Set ADMIN_PASSWORD environment variable to use a fixed password.');
+            logger.warn('[Startup] No ADMIN_PASSWORD set. A random password was generated for admin. Set ADMIN_PASSWORD env var to use a fixed password.');
         }
 
         const database = await db.getDb();

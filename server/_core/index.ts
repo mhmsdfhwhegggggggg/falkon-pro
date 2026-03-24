@@ -15,6 +15,7 @@ import { db, getDb } from "../db";
 import { healthCheck, readinessCheck, livenessCheck } from "./health";
 import { CacheSystem } from "./cache-system";
 import { StartupService } from "../services/startup.service";
+import { logger } from "./logger";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -42,7 +43,7 @@ async function startServer() {
       CacheSystem.getInstance(redisClient);
     }
   } catch (error) {
-    console.warn('[CacheSystem] Failed to initialize with Redis:', error);
+    logger.warn('[CacheSystem] Failed to initialize with Redis:', error);
   }
 
   const app = express();
@@ -64,9 +65,6 @@ async function startServer() {
       if (isAllowed) {
         res.header("Access-Control-Allow-Origin", origin);
       }
-    } else if (!ENV.isProduction) {
-      // Fallback for non-origin requests in dev
-      res.header("Access-Control-Allow-Origin", "*");
     }
 
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -137,16 +135,16 @@ async function startServer() {
   const port = await findAvailablePort(preferredPort);
 
   if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+    logger.info(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
   server.listen(port, () => {
-    console.log(`[api] server listening on port ${port}`);
+    logger.info(`[api] server listening on port ${port}`);
 
     // Initialize services
-    StartupService.initializeAllServices().catch(err => console.error('[Startup] Failed:', err));
+    StartupService.initializeAllServices().catch(err => logger.error('[Startup] Failed:', err));
   });
 }
 
-startServer().catch(console.error);
+startServer().catch(err => logger.error('[Server] Failed to start:', err));
 

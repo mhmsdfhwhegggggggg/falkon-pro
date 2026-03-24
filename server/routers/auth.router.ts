@@ -1,12 +1,13 @@
 import { router, publicProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { db, users, getUserByEmail } from "../db";
+import { getDb, users, getUserByEmail } from "../db";
 import { eq } from "drizzle-orm";
 import { SignJWT } from "jose";
 import { ENV } from "../_core/env";
 import { hashPassword, verifyPassword } from "../_core/crypto";
 import { StartupService } from "../services/startup.service";
+import { logger } from "../_core/logger";
 
 export const authRouter = router({
     login: publicProcedure
@@ -33,7 +34,7 @@ export const authRouter = router({
 
                 return { token, user: { id: user.id, email: user.email, name: user.username, role: user.role } };
             } catch (err: any) {
-                console.error('[Auth] Login error details:', err);
+                logger.error('[Auth] Login error:', err);
                 if (err instanceof TRPCError) throw err;
                 throw new TRPCError({ 
                     code: 'INTERNAL_SERVER_ERROR', 
@@ -55,7 +56,9 @@ export const authRouter = router({
                 throw new TRPCError({ code: "CONFLICT", message: "User already exists" });
             }
 
-            const [newUser] = await db.insert(users).values({
+            const database = await getDb();
+            if (!database) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not connected' });
+            const [newUser] = await database.insert(users).values({
                 email: input.email,
                 password: hashPassword(input.password),
                 username: input.name,

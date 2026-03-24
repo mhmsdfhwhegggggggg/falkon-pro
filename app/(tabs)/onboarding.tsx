@@ -5,7 +5,6 @@ import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 
-const trpcAny = trpc as any;
 
 export default function OnboardingScreen() {
   const colors = useColors();
@@ -17,15 +16,15 @@ export default function OnboardingScreen() {
   const sendMutation = trpc.accounts.bulkSendLoginCodes.useMutation();
   const confirmMutation = trpc.accounts.bulkConfirmCodes.useMutation();
   
-  const sendJobStatus = (trpcAny.bulkOps.getJobStatus.useQuery(
+  const sendJobStatus = trpc.bulkOps.getJobStatus.useQuery(
     { jobId: sendJobId || "" },
     { enabled: !!sendJobId, refetchInterval: 1000 }
-  ) as any);
+  );
   
-  const confirmJobStatus = (trpcAny.bulkOps.getJobStatus.useQuery(
+  const confirmJobStatus = trpc.bulkOps.getJobStatus.useQuery(
     { jobId: confirmJobId || "" },
     { enabled: !!confirmJobId, refetchInterval: 1000 }
-  ) as any);
+  );
 
   const disableSend = useMemo(() => phonesCsv.trim().length === 0, [phonesCsv]);
   const disableConfirm = useMemo(() => confirmCsv.trim().length === 0, [confirmCsv]);
@@ -80,22 +79,10 @@ export default function OnboardingScreen() {
   };
 
   const handleAutoExtractApi = () => {
-    const lines = confirmCsv.split(/\r?\n/).filter(Boolean);
-    const updatedLines = lines.map(line => {
-      const parts = line.split(',');
-      if (parts.length < 4) {
-        const phone = parts[0]?.trim();
-        const code = parts[1]?.trim();
-        const pass = parts[2]?.trim() || "";
-        if (phone && code) {
-          // Official Android API Pair
-          return `${phone},${code},${pass},6,eb06d4ab352def3c2643ad7a997439fb`;
-        }
-      }
-      return line;
-    });
-    setConfirmCsv(updatedLines.join('\n'));
-    Alert.alert("تم الاستخراج", "تم استخراج وربط مفاتيح API الرسمية لجميع الحسابات في القائمة.");
+    Alert.alert(
+      "تنبيه",
+      "يرجى إدخال API ID و API Hash الخاصة بتطبيقك من my.telegram.org في حقل CSV بالتنسيق: phone,code,password,apiId,apiHash"
+    );
   };
 
   return (
@@ -148,11 +135,11 @@ export default function OnboardingScreen() {
                 <Text className="text-white font-semibold text-center">بدء إرسال الأكواد</Text>
               </View>
             </Pressable>
-            {sendJobId && (sendJobStatus.data as any)?.found && (
+            {sendJobId && sendJobStatus.data && (sendJobStatus.data as Record<string, unknown>).found && (
               <View className="bg-surface rounded-lg p-3 border border-border mt-2">
                 <Text className="text-sm text-foreground">مهمة الإرسال: {sendJobId}</Text>
-                <Text className="text-sm text-foreground font-bold">الحالة: {(sendJobStatus.data as any).status}</Text>
-                <Text className="text-sm text-foreground">التقدم: {(sendJobStatus.data as any).progress}%</Text>
+                <Text className="text-sm text-foreground font-bold">الحالة: {String((sendJobStatus.data as Record<string, unknown>).status)}</Text>
+                <Text className="text-sm text-foreground">التقدم: {String((sendJobStatus.data as Record<string, unknown>).progress)}%</Text>
               </View>
             )}
           </View>
@@ -205,11 +192,11 @@ export default function OnboardingScreen() {
                 <Text className="text-white font-semibold text-center">تأكيد الأكواد وإنشاء الجلسات</Text>
               </View>
             </Pressable>
-            {confirmJobId && (confirmJobStatus.data as any)?.found && (
+            {confirmJobId && confirmJobStatus.data && (confirmJobStatus.data as Record<string, unknown>).found && (
               <View className="bg-surface rounded-lg p-3 border border-border mt-2">
                 <Text className="text-sm text-foreground">مهمة التأكيد: {confirmJobId}</Text>
-                <Text className="text-sm text-foreground">الحالة: {(confirmJobStatus.data as any).status}</Text>
-                <Text className="text-sm text-foreground">التقدم: {(confirmJobStatus.data as any).progress}%</Text>
+                <Text className="text-sm text-foreground">الحالة: {String((confirmJobStatus.data as Record<string, unknown>).status)}</Text>
+                <Text className="text-sm text-foreground">التقدم: {String((confirmJobStatus.data as Record<string, unknown>).progress)}%</Text>
               </View>
             )}
           </View>

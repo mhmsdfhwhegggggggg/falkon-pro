@@ -1,5 +1,6 @@
 import { router, licenseProtectedProcedure } from "../_core/trpc";
 import * as dbHelper from "../db";
+import { logger } from "../_core/logger";
 
 export const dashboardRouter = router({
   // Get dashboard statistics
@@ -31,7 +32,7 @@ export const dashboardRouter = router({
         messagesToday,
       };
     } catch (error) {
-      console.error("Failed to get dashboard stats:", error);
+      logger.error("Failed to get dashboard stats:", error);
       return { totalAccounts: 0, activeAccounts: 0, membersExtracted: 0, messagesToday: 0 };
     }
   }),
@@ -58,7 +59,7 @@ export const dashboardRouter = router({
         details: activity.details,
       }));
     } catch (error) {
-      console.error("Failed to get recent activities:", error);
+      logger.error("Failed to get recent activities:", error);
       return [];
     }
   }),
