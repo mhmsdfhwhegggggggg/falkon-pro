@@ -2,6 +2,8 @@ import { router, licenseProtectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import { JobQueue } from "../_core/queue";
 import * as dbHelper from "../db";
+import { ApiCredentialsGenerator } from "../services/api-credentials-generator";
+import { telegramClientService } from "../services/telegram-client.service";
 
 export const accountsRouter = router({
   // Get all accounts for the current user
@@ -34,6 +36,9 @@ export const accountsRouter = router({
         lastName: z.string().optional(),
         username: z.string().optional(),
         telegramId: z.string().optional(),
+        apiId: z.number().optional(),
+        apiHash: z.string().optional(),
+        credentialSource: z.string().default('shared'),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -49,9 +54,85 @@ export const accountsRouter = router({
         warmingLevel: 0,
         messagesSentToday: 0,
         dailyLimit: 100,
+        apiId: input.apiId,
+        apiHash: input.apiHash,
+        credentialSource: input.credentialSource as any,
       } as any);
 
       return { success: true, account: newAccount };
+    }),
+
+  // Step 1: Initialize account addition
+  initAddAccount: licenseProtectedProcedure
+    .input(z.object({ phoneNumber: z.string() }))
+    .mutation(async ({ input }) => {
+      const credentials = telegramClientService.getApiCredentials();
+      const codeRes = await telegramClientService.sendCode(
+        input.phoneNumber,
+        credentials.apiId,
+        credentials.apiHash
+      );
+      
+      // We don't wait for my.telegram.org password send here to avoid blocking, 
+      // but it's handled in the generator if needed. 
+      // Actually my.telegram.org requires a random_hash from the send_password call.
+      
+      return { 
+        success: true, 
+        phoneCodeHash: codeRes.phoneCodeHash,
+        isCodeSent: true 
+      };
+    }),
+
+  // Step 2: Confirm and finalize
+  confirmAddAccount: licenseProtectedProcedure
+    .input(z.object({
+      phoneNumber: z.string(),
+      phoneCodeHash: z.string(),
+      code: z.string(),
+      password: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // 1. Log in to Telegram
+      const credentials = telegramClientService.getApiCredentials();
+      const loginRes = await telegramClientService.signIn(
+        input.phoneNumber,
+        input.phoneCodeHash,
+        input.code,
+        credentials.apiId,
+        credentials.apiHash,
+        input.password
+      );
+
+      // 2. Attempt to generate custom API credentials (Multi-layer)
+      const apiResult = await ApiCredentialsGenerator.generateCredentialsGuaranteed(
+        input.phoneNumber,
+        input.code,
+        ctx.user!.id
+      );
+
+      // 3. Create account
+      const me = loginRes.user;
+      
+      const newAccount = await dbHelper.createTelegramAccount({
+        userId: ctx.user!.id,
+        phoneNumber: input.phoneNumber,
+        sessionString: loginRes.sessionString,
+        firstName: me?.firstName || "",
+        lastName: me?.lastName || "",
+        username: me?.username || "",
+        telegramId: me ? String(me.id) : "unknown",
+        isActive: true,
+        apiId: apiResult.apiId,
+        apiHash: apiResult.apiHash,
+        credentialSource: apiResult.source as any,
+      } as any);
+
+      return { 
+        success: true, 
+        account: newAccount,
+        apiSource: apiResult.source 
+      };
     }),
 
   // Delete an account
@@ -102,6 +183,7 @@ export const accountsRouter = router({
       healthyCount,
       restrictedCount,
       inactiveCount,
+      privateApiCount: accounts.filter(a => a.credentialSource !== 'shared').length,
     };
   }),
 });

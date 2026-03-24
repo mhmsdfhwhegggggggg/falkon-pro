@@ -47,7 +47,8 @@ export interface AccountHealth {
 }
 
 export class AntiBanDistributed {
-  private static redis: Redis;
+  private static redis: Redis | null = null;
+  private static healthCache = new Map<number, AccountHealth>();
 
   /**
    * Default operation limits (conservative for production safety)
@@ -69,6 +70,10 @@ export class AntiBanDistributed {
     this.redis = redis;
     DistributedRateLimiter.initialize(redis);
     console.log('[AntiBanDistributed] Industrial Protection Initialized');
+  }
+
+  private static isRedisAvailable(): boolean {
+    return !!this.redis && (this.redis as any).status === 'ready';
   }
 
   static async canPerformOperation(
@@ -160,17 +165,35 @@ export class AntiBanDistributed {
   }
 
   static async getAccountHealth(accountId: number): Promise<AccountHealth> {
-    const key = `antiban:health:${accountId}`;
-    const data = await this.redis.get(key);
-    return data ? JSON.parse(data) : {
+    const defaultHealth: AccountHealth = {
       accountId, riskScore: 0, lastWarning: null, warningCount: 0, lastBan: null, banCount: 0,
       successRate: 1.0, totalOperations: 0, failedOperations: 0, lastOperation: Date.now(), cooldownUntil: null
     };
+
+    if (!this.isRedisAvailable()) {
+      return this.healthCache.get(accountId) ?? defaultHealth;
+    }
+
+    try {
+      const key = `antiban:health:${accountId}`;
+      const data = await this.redis!.get(key);
+      return data ? JSON.parse(data) : defaultHealth;
+    } catch {
+      return this.healthCache.get(accountId) ?? defaultHealth;
+    }
   }
 
   private static async saveAccountHealth(health: AccountHealth): Promise<void> {
-    const key = `antiban:health:${health.accountId}`;
-    await this.redis.setex(key, 86400 * 30, JSON.stringify(health));
+    this.healthCache.set(health.accountId, health);
+
+    if (!this.isRedisAvailable()) return;
+
+    try {
+      const key = `antiban:health:${health.accountId}`;
+      await this.redis!.setex(key, 86400 * 30, JSON.stringify(health));
+    } catch {
+      // Silently fall back to in-memory cache
+    }
   }
 
   private static calculateRiskLevel(health: AccountHealth): 'low' | 'medium' | 'high' | 'critical' {

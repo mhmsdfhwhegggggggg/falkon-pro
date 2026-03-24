@@ -25,5 +25,5 @@ EXPOSE 3000
 # Set environment to production
 ENV NODE_ENV=production
 
-# Start the application
-CMD ["node", "dist/index.js"]
+# Start the application (running migrations first)
+CMD ["sh", "-c", "npm run db:migrate && node dist/index.js"]

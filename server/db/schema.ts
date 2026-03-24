@@ -80,6 +80,7 @@ export const telegramAccounts = pgTable('telegram_accounts', {
   lastRestrictedAt: timestamp('last_restricted_at'),
   apiId: integer('api_id'),
   apiHash: varchar('api_hash', { length: 255 }),
+  credentialSource: varchar('credential_source', { length: 50 }).default('shared').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -218,6 +219,17 @@ export const contentClonerRules = pgTable('content_cloner_rules', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// API Credential Pool table
+export const apiCredentialPool = pgTable('api_credential_pool', {
+  id: serial('id').primaryKey(),
+  apiId: integer('api_id').notNull(),
+  apiHash: varchar('api_hash', { length: 255 }).notNull(),
+  status: varchar('status', { length: 50 }).notNull().default('available'), // available, used, failed
+  errorReason: text('error_reason'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  usedAt: timestamp('used_at'),
+});
+
 // Export all tables
 export const schema = {
   users,
@@ -233,6 +245,7 @@ export const schema = {
   proxyConfigs,
   autoReplyRules,
   contentClonerRules,
+  apiCredentialPool,
 };
 
 // Type Inferences

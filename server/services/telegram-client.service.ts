@@ -9,6 +9,52 @@ export class TelegramClientService {
   private static clients: Map<number, TelegramClient> = new Map();
 
   // ... (existing methods getApiCredentials, initializeClient, disconnectClient, getClient)
+  
+  /**
+   * Send login code to phone
+   */
+  async sendCode(phoneNumber: string, apiId: number, apiHash: string) {
+    const client = new TelegramClient(new StringSession(""), apiId, apiHash, {
+      connectionRetries: 5,
+    });
+    await client.connect();
+    const res = await client.sendCode({
+      apiId,
+      apiHash,
+    }, phoneNumber);
+    await client.disconnect();
+    return res;
+  }
+
+  /**
+   * Sign in with code and optional password (2FA)
+   */
+  async signIn(
+    phoneNumber: string,
+    phoneCodeHash: string,
+    code: string,
+    apiId: number,
+    apiHash: string,
+    password?: string
+  ) {
+    const client = new TelegramClient(new StringSession(""), apiId, apiHash, {
+      connectionRetries: 5,
+    });
+    await client.connect();
+    
+    await (client as any).signIn({
+      phoneNumber,
+      phoneCodeHash,
+      phoneCode: code,
+      password: async () => password || "",
+      onError: (err: any) => { throw err; }
+    });
+
+    const user = await client.getMe();
+    const sessionString = (client.session as StringSession).save();
+    await client.disconnect();
+    return { sessionString, user: user as Api.User };
+  }
 
   /**
    * Add event handler to client

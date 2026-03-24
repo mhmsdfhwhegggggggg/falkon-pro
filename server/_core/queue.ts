@@ -43,6 +43,9 @@ export type ExtractAndAddPayload = {
   limit?: number;
   dedupeBy: "telegramUserId" | "username";
   delayMs: number;
+  joinTarget: boolean;
+  exportPath?: string;
+  importPath?: string;
 };
 
 export type JobPayload =
@@ -109,6 +112,9 @@ async function initializeQueue() {
   const redisUrl = Secrets.getRedisUrl() || ENV.redisUrl;
 
   if (!redisUrl) {
+    if (ENV.isProduction) {
+      throw new Error('[Queue] CRITICAL: Redis URL is missing in production! System cannot proceed safely with MockQueue.');
+    }
     console.info('[Queue] No Redis URL provided, using mock queue by default.');
     connection = null;
     bulkOpsQueue = new MockQueue();
@@ -142,6 +148,9 @@ async function initializeQueue() {
     }
     console.log('[Queue] Connected to Redis successfully');
   } catch (error: any) {
+    if (ENV.isProduction) {
+       throw new Error(`[Queue] CRITICAL: Failed to connect to Redis in production: ${error.message}`);
+    }
     console.warn('[Queue] Redis not available, using mock queue:', error.message);
     connection = null;
     bulkOpsQueue = new MockQueue();

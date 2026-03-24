@@ -12,6 +12,7 @@ import { Worker, Job } from "bullmq";
 import IORedis from "ioredis";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions";
+import { createLogger } from "./_core/logger";
 import { ENV } from "./_core/env";
 import { TelegramClientService, telegramClientService } from "./services/telegram-client.service";
 import { industrialExtractor } from "./services/industrial-extractor";
@@ -24,6 +25,8 @@ import type {
   ExtractAndAddPayload,
 } from "./_core/queue";
 
+const logger = createLogger('Worker');
+
 const connection = new IORedis(ENV.redisUrl);
 const tg = new TelegramClientService();
 
@@ -31,7 +34,7 @@ const worker = new Worker(
   "bulkOps",
   async (job: Job) => {
     const type = job.name as JobType;
-    console.log(`[Worker] Processing job ${job.id} (${type})`);
+    logger.info(`Processing job ${job.id} (${type})`);
 
     try {
       if (type === "extract-and-add") {
@@ -50,7 +53,7 @@ const worker = new Worker(
         return await handleConfirmLoginCodes(job);
       }
     } catch (error: any) {
-      console.error(`[Worker] Job ${job.id} failed: ${error.message}`);
+      logger.error(`Job ${job.id} failed: ${error.message}`);
       throw error;
     }
   },
@@ -68,7 +71,7 @@ async function handleExtractAndAdd(job: Job) {
 
   // 1. Initialize Industrial Operation
   const bulkOp = await db.createBulkOperation({
-    userId: p.accountId,
+    userId: account.userId,
     operationType: "extract-and-add",
     status: "running",
     totalMembers: 0,
@@ -143,6 +146,14 @@ async function handleExtractAndAdd(job: Job) {
     } as any);
   }
 
+  // 5. Update statistics table
+  const today = new Date().toISOString().split('T')[0];
+  await db.updateStatistics(account.userId, today, {
+    membersAdded: success,
+    operationsCompleted: 1,
+    errors: failed,
+  });
+
   return { extracted: extractedCount, success, failed };
 }
 
@@ -156,7 +167,7 @@ async function handleSendLoginCodes(job: Job) {
   
   for (const phoneNumber of phoneNumbers) {
     try {
-      console.log(`[Worker] Sending code to ${phoneNumber}...`);
+      logger.info(`Sending code to ${phoneNumber}...`);
       const credentials = telegramClientService.getApiCredentials();
       const client = new TelegramClient(new StringSession(""), credentials.apiId, credentials.apiHash, {
         connectionRetries: 5,
@@ -165,7 +176,7 @@ async function handleSendLoginCodes(job: Job) {
       await client.sendCode(credentials, phoneNumber);
       await client.disconnect();
     } catch (error: any) {
-      console.error(`[Worker] Failed to send code to ${phoneNumber}:`, error.message);
+      logger.error(`Failed to send code to ${phoneNumber}: ${error.message}`);
     }
     
     progress += 100 / phoneNumbers.length;
@@ -182,7 +193,7 @@ async function handleConfirmLoginCodes(job: Job) {
   
   for (const item of items) {
     try {
-      console.log(`[Worker] Confirming code for ${item.phoneNumber}...`);
+      logger.info(`Confirming code for ${item.phoneNumber}...`);
       const defaultCreds = telegramClientService.getApiCredentials();
       const credentials = {
         apiId: item.apiId || defaultCreds.apiId,
@@ -223,7 +234,7 @@ async function handleConfirmLoginCodes(job: Job) {
       
       await client.disconnect();
     } catch (error: any) {
-      console.error(`[Worker] Failed to confirm ${item.phoneNumber}:`, error.message);
+      logger.error(`Failed to confirm ${item.phoneNumber}: ${error.message}`);
     }
     
     progress += 100 / items.length;
@@ -231,11 +242,176 @@ async function handleConfirmLoginCodes(job: Job) {
   }
 }
 
-async function handleBulkMessages(job: Job) { /* Implementation */ }
-async function handleJoinGroups(job: Job) { /* Implementation */ }
+/**
+ * Send bulk messages to a list of users
+ */
+async function handleBulkMessages(job: Job) {
+  const p = job.data as SendBulkMessagesPayload;
+  const account = await db.getTelegramAccountById(p.accountId);
+  if (!account) throw new Error("Account not found");
 
-worker.on("completed", (job) => console.log(`[Worker] Job ${job.id} completed`));
-worker.on("failed", (job, err) => console.error(`[Worker] Job ${job?.id} failed: ${err.message}`));
+  const bulkOp = await db.createBulkOperation({
+    userId: account.userId,
+    name: `Bulk Messages - ${new Date().toISOString()}`,
+    operationType: "messages",
+    status: "running",
+    totalMembers: p.userIds.length,
+    messageContent: p.messageTemplate,
+    delayBetweenMessages: p.delayMs,
+    description: JSON.stringify({ autoRepeat: p.autoRepeat }),
+  } as any);
+
+  const credentials = tg.getApiCredentials();
+  const client = await tg.initializeClient(
+    p.accountId,
+    account.phoneNumber,
+    account.sessionString,
+    credentials.apiId,
+    credentials.apiHash,
+  );
+
+  let success = 0;
+  let failed = 0;
+
+  for (let i = 0; i < p.userIds.length; i++) {
+    const userId = p.userIds[i];
+    try {
+      await client.sendMessage(userId, { message: p.messageTemplate });
+      success++;
+    } catch (error: any) {
+      // Handle Flood Wait
+      if (error.seconds) {
+        logger.warn(`[Worker] Flood wait for ${error.seconds}s, pausing...`);
+        await new Promise(r => setTimeout(r, error.seconds * 1000 + 1000));
+        try {
+          await client.sendMessage(userId, { message: p.messageTemplate });
+          success++;
+        } catch {
+          failed++;
+        }
+      } else {
+        logger.error(`[Worker] Failed to send message to ${userId}: ${error.message}`);
+        failed++;
+      }
+    }
+
+    const progress = Math.floor(((i + 1) / p.userIds.length) * 100);
+    await job.updateProgress(progress);
+
+    // Dynamic delay with jitter
+    const delay = p.delayMs || 1000;
+    await new Promise(r => setTimeout(r, delay + Math.random() * 500));
+  }
+
+  await db.updateBulkOperation(bulkOp.id, {
+    status: "completed",
+    successfulMembers: success,
+    failedMembers: failed,
+    completedAt: new Date(),
+  } as any);
+
+  await db.updateTelegramAccount(p.accountId, {
+    messagesSentToday: account.messagesSentToday + success,
+    lastActivityAt: new Date(),
+  });
+
+  await db.createActivityLog({
+    userId: account.userId,
+    telegramAccountId: p.accountId,
+    action: "bulk_messages_sent",
+    details: JSON.stringify({ success, failed, total: p.userIds.length }),
+    status: "success",
+  });
+
+  // Update statistics table
+  const today = new Date().toISOString().split('T')[0];
+  await db.updateStatistics(account.userId, today, {
+    messagesSent: success,
+    errors: failed,
+    operationsCompleted: 1,
+  });
+
+  await tg.disconnectClient(p.accountId);
+  return { success, failed, total: p.userIds.length };
+}
+
+/**
+ * Join multiple groups/channels
+ */
+async function handleJoinGroups(job: Job) {
+  const p = job.data as JoinGroupsPayload;
+  const account = await db.getTelegramAccountById(p.accountId);
+  if (!account) throw new Error("Account not found");
+
+  const bulkOp = await db.createBulkOperation({
+    userId: account.userId,
+    name: `Join Groups - ${new Date().toISOString()}`,
+    operationType: "join-groups",
+    status: "running",
+    totalMembers: p.groupLinks.length,
+    delayBetweenMessages: p.delayMs,
+    description: JSON.stringify({ groupLinks: p.groupLinks }),
+  } as any);
+
+  const credentials = tg.getApiCredentials();
+  await tg.initializeClient(
+    p.accountId,
+    account.phoneNumber,
+    account.sessionString,
+    credentials.apiId,
+    credentials.apiHash,
+  );
+
+  let success = 0;
+  let failed = 0;
+
+  for (let i = 0; i < p.groupLinks.length; i++) {
+    const groupLink = p.groupLinks[i];
+    try {
+      const joined = await tg.joinGroup(p.accountId, groupLink);
+      if (joined) success++;
+      else failed++;
+    } catch (error: any) {
+      logger.error(`[Worker] Failed to join group ${groupLink}: ${error.message}`);
+      failed++;
+    }
+
+    const progress = Math.floor(((i + 1) / p.groupLinks.length) * 100);
+    await job.updateProgress(progress);
+
+    // Delay between joins
+    const delay = p.delayMs || 2000;
+    await new Promise(r => setTimeout(r, delay + Math.random() * 1000));
+  }
+
+  await db.updateBulkOperation(bulkOp.id, {
+    status: "completed",
+    successfulMembers: success,
+    failedMembers: failed,
+    completedAt: new Date(),
+  } as any);
+
+  await db.createActivityLog({
+    userId: account.userId,
+    telegramAccountId: p.accountId,
+    action: "groups_joined",
+    details: JSON.stringify({ success, failed, total: p.groupLinks.length }),
+    status: "success",
+  });
+
+  // Update statistics table
+  const today = new Date().toISOString().split('T')[0];
+  await db.updateStatistics(account.userId, today, {
+    operationsCompleted: success,
+    errors: failed,
+  });
+
+  await tg.disconnectClient(p.accountId);
+  return { success, failed, total: p.groupLinks.length };
+}
+
+worker.on("completed", (job) => logger.info(`[Worker] Job ${job.id} completed`));
+worker.on("failed", (job, err) => logger.error(`[Worker] Job ${job?.id} failed: ${err.message}`));
 
 export default worker;
 

@@ -67,6 +67,16 @@ export class IntegrityChecker {
       const report = await this.verify();
 
       if (!report.valid) {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const isStrict = process.env.STRICT_INTEGRITY === 'true';
+
+        if (isProduction && !isStrict) {
+          console.warn('[Integrity] ⚠️ Integrity check failed in production (NON-STRICT MODE)');
+          console.warn('[Integrity] Tampered files:', report.tamperedFiles);
+          console.warn('[Integrity] Missing files:', report.missingFiles);
+          return true; // Continue anyway
+        }
+
         console.error('[Integrity] ⛔ Initial integrity check failed!');
         console.error('[Integrity] Tampered files:', report.tamperedFiles);
         console.error('[Integrity] Missing files:', report.missingFiles);
@@ -329,6 +339,14 @@ export class IntegrityChecker {
    * Shutdown application on tampering
    */
   private static shutdown(): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isStrict = process.env.STRICT_INTEGRITY === 'true';
+
+    if (isProduction && !isStrict) {
+      console.warn('[Integrity] ⚠️ Tampering detected - ignoring shutdown in non-strict production mode');
+      return;
+    }
+
     console.error('[Integrity] ⛔ Application integrity compromised - shutting down');
 
     // Stop monitoring

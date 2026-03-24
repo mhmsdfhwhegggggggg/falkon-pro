@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, TouchableOpacity, ActivityIndicator, Alert, RefreshControl } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, ActivityIndicator, Alert, RefreshControl, Modal, TextInput } from "react-native";
 import { useState, useEffect, useCallback } from "react";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
@@ -19,19 +19,72 @@ export default function AccountsScreen() {
   const colors = useColors();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch accounts from API
+  // Fetch accounts and health overview
   const { data: accounts, isLoading, refetch } = trpc.accounts.getAll.useQuery(undefined);
+  const { data: health } = trpc.accounts.getHealthOverview.useQuery(undefined, { refetchInterval: 10000 });
   const deleteAccountMutation = trpc.accounts.delete.useMutation();
+
+  // Wizard state
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState<'phone' | 'code' | 'success'>('phone');
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [phoneCodeHash, setPhoneCodeHash] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [addedAccountInfo, setAddedAccountInfo] = useState<any>(null);
+
+  const initAddMutation = trpc.accounts.initAddAccount.useMutation();
+  const confirmAddMutation = trpc.accounts.confirmAddAccount.useMutation();
+
+  const handleAddAccount = () => {
+    setWizardStep('phone');
+    setPhoneNumber("");
+    setCode("");
+    setPassword("");
+    setAddedAccountInfo(null);
+    setIsWizardOpen(true);
+  };
+
+  const handleInitAdd = async () => {
+    if (!phoneNumber) return Alert.alert("خطأ", "يرجى إدخال رقم الهاتف");
+    setIsSubmitting(true);
+    try {
+      const res = await initAddMutation.mutateAsync({ phoneNumber });
+      setPhoneCodeHash(res.phoneCodeHash);
+      setWizardStep('code');
+    } catch (e: any) {
+      Alert.alert("خطأ", e.message || "فشل إرسال الكود");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmAdd = async () => {
+    if (!code) return Alert.alert("خطأ", "يرجى إدخال الكود المستلم");
+    setIsSubmitting(true);
+    try {
+      const res = await confirmAddMutation.mutateAsync({
+        phoneNumber,
+        phoneCodeHash,
+        code,
+        password: password || undefined
+      });
+      setAddedAccountInfo(res);
+      setWizardStep('success');
+      refetch();
+    } catch (e: any) {
+      Alert.alert("خطأ", e.message || "فشل التحقق من الكود");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetch();
     setRefreshing(false);
   }, [refetch]);
-
-  const handleAddAccount = () => {
-    Alert.alert("إضافة حساب", "يمكنك إضافة حسابات فردية أو دفعات كبيرة عبر صفحة Onboarding");
-  };
 
   const handleSmartUnban = (phoneNumber: string) => {
     Alert.alert(
@@ -81,6 +134,21 @@ export default function AccountsScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Health Stats Bar */}
+          <View className="flex-row gap-3">
+            {[
+              { label: 'نشط', value: health?.healthyCount || 0, color: colors.success, bg: 'bg-success/10' },
+              { label: 'مقيد', value: health?.restrictedCount || 0, color: colors.error, bg: 'bg-error/10' },
+              { label: 'API خاص', value: health?.privateApiCount || 0, color: colors.primary, bg: 'bg-primary/10' },
+              { label: 'المجموع', value: health?.totalCount || 0, color: colors.foreground, bg: 'bg-surface border border-border' }
+            ].map((stat, i) => (
+              <View key={i} className={`flex-1 p-3 rounded-2xl items-center ${stat.bg}`}>
+                <Text style={{ color: stat.color }} className="text-lg font-bold">{stat.value}</Text>
+                <Text className="text-[10px] text-muted font-bold">{stat.label}</Text>
+              </View>
+            ))}
+          </View>
+
           {/* Smart Tools */}
           <View className="flex-row gap-3">
             <TouchableOpacity
@@ -115,13 +183,19 @@ export default function AccountsScreen() {
                   <View className="flex-row items-start justify-between">
                     <View className="flex-1">
                       {/* Phone and Status */}
-                      <View className="flex-row items-center gap-2 mb-1">
+                      <View className="flex-row items-center gap-2 mb-1 flex-wrap">
                         <Text className="text-lg font-bold text-foreground">
                           {account.phoneNumber}
                         </Text>
                         <View className={`px-2 py-0.5 rounded-lg ${account.isActive ? "bg-success/10" : "bg-error/10"}`}>
                           <Text className={`text-[10px] font-bold ${account.isActive ? "text-success" : "text-error"}`}>
                             {account.isActive ? "نشط" : "مقيد"}
+                          </Text>
+                        </View>
+                        {/* API Source Badge */}
+                        <View className={`px-2 py-0.5 rounded-lg border ${account.credentialSource !== 'shared' ? "bg-primary/10 border-primary/20" : "bg-surface border-border"}`}>
+                          <Text className={`text-[10px] font-bold ${account.credentialSource !== 'shared' ? "text-primary" : "text-muted"}`}>
+                            {account.credentialSource !== 'shared' ? "🔑 Private" : "⚠️ Shared"}
                           </Text>
                         </View>
                       </View>
@@ -141,7 +215,7 @@ export default function AccountsScreen() {
                         <View className="h-1.5 bg-background rounded-full overflow-hidden">
                           <View
                             className="h-full bg-primary"
-                            style={{ width: `${account.warmingLevel}%` }}
+                            style={{ width: `${account.warmingLevel || 0}%` }}
                           />
                         </View>
                       </View>
@@ -214,6 +288,97 @@ export default function AccountsScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Account Addition Wizard */}
+      <Modal
+        visible={isWizardOpen}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsWizardOpen(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-surface rounded-t-[40px] p-8 pb-12 gap-6 min-h-[50%]">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-2xl font-bold text-foreground">إضافة حساب جديد</Text>
+              <TouchableOpacity onPress={() => setIsWizardOpen(false)}>
+                <IconSymbol name="xmark.circle.fill" size={24} color={colors.muted} />
+              </TouchableOpacity>
+            </View>
+
+            {wizardStep === 'phone' && (
+              <View className="gap-4">
+                <Text className="text-muted leading-relaxed">أدخل رقم الهاتف متبوعاً بمقدمة الدولة (مثلاً: +966500000000)</Text>
+                <TextInput
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+                  keyboardType="phone-pad"
+                  placeholder="+CountryNumber..."
+                  placeholderTextColor={colors.muted}
+                  className="bg-background p-4 rounded-2xl text-foreground text-lg border border-border"
+                />
+                <TouchableOpacity
+                  onPress={handleInitAdd}
+                  disabled={isSubmitting}
+                  className="bg-primary p-4 rounded-2xl items-center shadow-sm"
+                >
+                  {isSubmitting ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-lg">إرسال كود التحقق</Text>}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {wizardStep === 'code' && (
+              <View className="gap-4">
+                <Text className="text-muted leading-relaxed">سنقوم باستخدام هذا الكود لمرتين: لتسجيل الدخول ولاستخراج API الخاص بك تلقائياً.</Text>
+                <TextInput
+                  value={code}
+                  onChangeText={setCode}
+                  keyboardType="number-pad"
+                  placeholder="الكود المكون من 5 أرقام..."
+                  placeholderTextColor={colors.muted}
+                  className="bg-background p-4 rounded-2xl text-foreground text-center text-3xl font-bold border border-border"
+                  maxLength={5}
+                />
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  placeholder="كلمة مرور الـ 2FA (اختياري)"
+                  placeholderTextColor={colors.muted}
+                  className="bg-background p-4 rounded-2xl text-foreground border border-border text-center"
+                />
+                <TouchableOpacity
+                  onPress={handleConfirmAdd}
+                  disabled={isSubmitting}
+                  className="bg-primary p-4 rounded-2xl items-center shadow-sm"
+                >
+                  {isSubmitting ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-lg">تأكيد وإضافة الحساب</Text>}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {wizardStep === 'success' && (
+              <View className="items-center gap-6 py-6">
+                <View className="w-20 h-20 bg-success/20 rounded-full items-center justify-center">
+                  <IconSymbol name="checkmark.circle.fill" size={48} color={colors.success} />
+                </View>
+                <View className="items-center">
+                  <Text className="text-xl font-bold text-foreground">تمت الإضافة بنجاح!</Text>
+                  <Text className="text-muted text-center mt-2 px-4 leading-relaxed">
+                    تم ربط الحساب بنجاح واستخراج API خاص به من نوع:
+                    <Text className="text-primary font-bold"> {addedAccountInfo?.apiSource === 'direct' ? 'خاص (Direct)' : addedAccountInfo?.apiSource === 'proxy' ? 'بروكسي (Proxy)' : 'مخزن (Pool)'}</Text>
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setIsWizardOpen(false)}
+                  className="bg-primary/10 border border-primary/20 w-full p-4 rounded-2xl items-center"
+                >
+                  <Text className="text-primary font-bold text-lg">إغلاق</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }

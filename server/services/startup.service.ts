@@ -10,6 +10,7 @@ import { logger } from '../_core/logger';
 import * as db from '../db';
 import { eq } from 'drizzle-orm';
 import { hashPassword } from '../_core/crypto';
+import { ApiCredentialsGenerator } from './api-credentials-generator';
 
 export class StartupService {
     /**
@@ -39,6 +40,9 @@ export class StartupService {
 
             // 3. Initialize Service Listeners
             await this.initializeServiceListeners();
+
+            // 4. Retry pending API extractions
+            await ApiCredentialsGenerator.retryPendingExtractions();
 
             logger.info('[Startup] All services initialized successfully');
         } catch (error: any) {

@@ -145,6 +145,57 @@ export default function LicenseDashboardScreen() {
     }
   };
 
+  const handleValidateLicense = (licenseKey: string) => {
+    validateLicense.mutate({ licenseKey }, {
+      onSuccess: (result: any) => {
+        if (result.valid) {
+          Alert.alert('صالح', 'هذا الترخيص صالح ومفعل');
+        } else {
+          Alert.alert('غير صالح', 'هذا الترخيص غير موجود أو منتهي الصلاحية');
+        }
+      },
+      onError: () => {
+        Alert.alert('خطأ', 'فشل التحقق من الترخيص');
+      }
+    });
+  };
+
+  const renderOverview = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>📊 نظرة عامة على النظام</Text>
+      
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{analytics?.analytics?.totalLicenses || 0}</Text>
+          <Text style={styles.statLabel}>إجمالي التراخيص</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{analytics?.analytics?.activeLicenses || 0}</Text>
+          <Text style={styles.statLabel}>تراخيص نشطة</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={[styles.statNumber, { color: '#ef4444' }]}>{analytics?.analytics?.expiredLicenses || 0}</Text>
+          <Text style={styles.statLabel}>تراخيص منتهية</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={[styles.statNumber, { color: '#10b981' }]}>${analytics?.analytics?.totalRevenue || 0}</Text>
+          <Text style={styles.statLabel}>إجمالي الإيرادات</Text>
+        </View>
+      </View>
+
+      <View style={styles.hardwareSection}>
+        <Text style={styles.hardwareTitle}>💻 معرف الجهاز الحالي (HWID)</Text>
+        <Text style={styles.hardwareId}>{hardwareId || 'جاري التحميل...'}</Text>
+        <TouchableOpacity 
+          style={styles.copyButton}
+          onPress={() => Alert.alert('تم النسخ', 'تم نسخ معرف الجهاز إلى الحافظة')}
+        >
+          <Text style={styles.copyButtonText}>نسخ المعرف</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   const renderUsers = () => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>👥 إدارة المستخدمين</Text>
