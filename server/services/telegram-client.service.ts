@@ -8,8 +8,6 @@ import { entityResolver } from "./entity-resolver";
 export class TelegramClientService {
   private static clients: Map<number, TelegramClient> = new Map();
 
-  // ... (existing methods getApiCredentials, initializeClient, disconnectClient, getClient)
-
   /**
    * Add event handler to client
    */
@@ -39,7 +37,6 @@ export class TelegramClientService {
     }
   }
 
-  // ... (existing methods extractGroupMembers, sendMessage)
   /**
    * Get API credentials from environment or secrets
    */
