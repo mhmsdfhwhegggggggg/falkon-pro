@@ -198,3 +198,4 @@ export async function listJobs(state: ("waiting" | "active" | "delayed" | "compl
   const jobs = await bulkOpsQueue.getJobs(state, start, end);
   return jobs.map((j: any) => ({ id: String(j.id), name: j.name, state: j.getState(), progress: typeof j.progress === 'number' ? j.progress : 0, timestamp: j.timestamp }));
 }
+

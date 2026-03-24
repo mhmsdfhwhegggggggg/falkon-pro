@@ -37,6 +37,9 @@ export default function ExtractAndAddScreen() {
   const [requireUsername, setRequireUsername] = useState(true);
   const [limit, setLimit] = useState('1000');
   const [delayMs, setDelayMs] = useState('2000');
+  const [joinTarget, setJoinTarget] = useState(false);
+  const [exportPath, setExportPath] = useState('');
+  const [importPath, setImportPath] = useState('');
 
   // Job state
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
@@ -77,6 +80,9 @@ export default function ExtractAndAddScreen() {
       requireUsername,
       limit: limit ? Number(limit) : undefined,
       delayMs: Number(delayMs),
+      joinTarget,
+      exportPath: exportPath || undefined,
+      importPath: importPath || undefined,
     }, {
       onSuccess: (data: any) => {
         setCurrentJobId(data.jobId);
@@ -199,7 +205,36 @@ export default function ExtractAndAddScreen() {
               <Switch value={requireUsername} onValueChange={setRequireUsername} trackColor={{ true: colors.primary }} />
             </View>
 
-            <View className="flex-row gap-4">
+            <View className="border-t border-border mt-2 pt-4 gap-4">
+              <Text className="text-sm font-bold text-primary">إعدادات متقدمة (Industrial)</Text>
+              
+              <View className="flex-row items-center justify-between">
+                <Text className="text-foreground">انضمام تلقائي قبل البدء</Text>
+                <Switch value={joinTarget} onValueChange={setJoinTarget} trackColor={{ true: colors.primary }} />
+              </View>
+
+              <View className="gap-2">
+                <Text className="text-[10px] text-muted">مسار التصدير (Optional CSV/JSON)</Text>
+                <TextInput
+                  placeholder="C:\Downloads\members.csv"
+                  value={exportPath}
+                  onChangeText={setExportPath}
+                  className="bg-background border border-border rounded-lg p-2 text-foreground text-xs"
+                />
+              </View>
+
+              <View className="gap-2">
+                <Text className="text-[10px] text-muted">مسار الاستيراد (Optional CSV/JSON)</Text>
+                <TextInput
+                  placeholder="C:\Downloads\import.csv"
+                  value={importPath}
+                  onChangeText={setImportPath}
+                  className="bg-background border border-border rounded-lg p-2 text-foreground text-xs"
+                />
+              </View>
+            </View>
+
+            <View className="flex-row gap-4 mt-2">
               <View className="flex-1 gap-1">
                 <Text className="text-[10px] text-muted">الحد الأقصى</Text>
                 <TextInput
@@ -268,3 +303,4 @@ export default function ExtractAndAddScreen() {
     </ScreenContainer>
   );
 }
+

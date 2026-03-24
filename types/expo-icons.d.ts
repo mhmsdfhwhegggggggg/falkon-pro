@@ -4,3 +4,4 @@ declare module '@expo/vector-icons/MaterialIcons' {
     const MaterialIcons: Icon<string, string>;
     export default MaterialIcons;
 }
+

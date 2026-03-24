@@ -87,3 +87,4 @@ export class HighSpeedAdder {
 }
 
 export const highSpeedAdder = HighSpeedAdder.getInstance();
+

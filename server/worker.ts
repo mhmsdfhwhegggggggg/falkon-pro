@@ -10,8 +10,10 @@
 
 import { Worker, Job } from "bullmq";
 import IORedis from "ioredis";
+import { TelegramClient } from "telegram";
+import { StringSession } from "telegram/sessions";
 import { ENV } from "./_core/env";
-import { TelegramClientService } from "./services/telegram-client.service";
+import { TelegramClientService, telegramClientService } from "./services/telegram-client.service";
 import { industrialExtractor } from "./services/industrial-extractor";
 import { highSpeedAdder } from "./services/high-speed-adder";
 import * as db from "./db";
@@ -40,6 +42,12 @@ const worker = new Worker(
       }
       if (type === "join-groups") {
         return await handleJoinGroups(job);
+      }
+      if (type === "send-login-codes") {
+        return await handleSendLoginCodes(job);
+      }
+      if (type === "confirm-login-codes") {
+        return await handleConfirmLoginCodes(job);
       }
     } catch (error: any) {
       console.error(`[Worker] Job ${job.id} failed: ${error.message}`);
@@ -139,6 +147,90 @@ async function handleExtractAndAdd(job: Job) {
 }
 
 // Simplified handlers for other types...
+/**
+ * Send login codes to many phone numbers
+ */
+async function handleSendLoginCodes(job: Job) {
+  const { phoneNumbers } = job.data;
+  let progress = 0;
+  
+  for (const phoneNumber of phoneNumbers) {
+    try {
+      console.log(`[Worker] Sending code to ${phoneNumber}...`);
+      const credentials = telegramClientService.getApiCredentials();
+      const client = new TelegramClient(new StringSession(""), credentials.apiId, credentials.apiHash, {
+        connectionRetries: 5,
+      });
+      await client.connect();
+      await client.sendCode(credentials, phoneNumber);
+      await client.disconnect();
+    } catch (error: any) {
+      console.error(`[Worker] Failed to send code to ${phoneNumber}:`, error.message);
+    }
+    
+    progress += 100 / phoneNumbers.length;
+    await job.updateProgress(Math.floor(progress));
+  }
+}
+
+/**
+ * Confirm login codes and create sessions
+ */
+async function handleConfirmLoginCodes(job: Job) {
+  const { userId, items } = job.data;
+  let progress = 0;
+  
+  for (const item of items) {
+    try {
+      console.log(`[Worker] Confirming code for ${item.phoneNumber}...`);
+      const defaultCreds = telegramClientService.getApiCredentials();
+      const credentials = {
+        apiId: item.apiId || defaultCreds.apiId,
+        apiHash: item.apiHash || defaultCreds.apiHash
+      };
+      
+      const client = new TelegramClient(new StringSession(""), credentials.apiId, credentials.apiHash, {
+        connectionRetries: 5,
+      });
+      
+      await client.connect();
+      await client.start({
+        phoneNumber: item.phoneNumber,
+        phoneCode: async () => item.code,
+        password: async () => item.password || "",
+        onError: (err: any) => { throw err; }
+      });
+      
+      const sessionString = client.session.save() as any;
+      const me = await client.getMe() as any;
+      
+      // Create account in DB
+      await db.createTelegramAccount({
+        userId,
+        phoneNumber: item.phoneNumber,
+        sessionString: sessionString,
+        telegramId: me.id.toString(),
+        firstName: me.firstName,
+        lastName: me.lastName,
+        username: me.username,
+        apiId: credentials.apiId,
+        apiHash: credentials.apiHash,
+        isActive: true,
+        warmingLevel: 0,
+        messagesSentToday: 0,
+        dailyLimit: 100,
+      } as any);
+      
+      await client.disconnect();
+    } catch (error: any) {
+      console.error(`[Worker] Failed to confirm ${item.phoneNumber}:`, error.message);
+    }
+    
+    progress += 100 / items.length;
+    await job.updateProgress(Math.floor(progress));
+  }
+}
+
 async function handleBulkMessages(job: Job) { /* Implementation */ }
 async function handleJoinGroups(job: Job) { /* Implementation */ }
 
@@ -146,3 +238,4 @@ worker.on("completed", (job) => console.log(`[Worker] Job ${job.id} completed`))
 worker.on("failed", (job, err) => console.error(`[Worker] Job ${job?.id} failed: ${err.message}`));
 
 export default worker;
+

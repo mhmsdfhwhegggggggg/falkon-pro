@@ -400,3 +400,4 @@ export class AntiDebug {
     }
   }
 }
+

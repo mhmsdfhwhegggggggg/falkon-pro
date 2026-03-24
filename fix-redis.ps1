@@ -56,3 +56,4 @@ if ($attempts -eq $maxAttempts) {
 }
 
 Write-Host "Redis setup completed!" -ForegroundColor Green
+

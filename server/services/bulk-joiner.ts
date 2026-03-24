@@ -69,3 +69,4 @@ export class BulkJoiner {
 }
 
 export const bulkJoiner = BulkJoiner.getInstance();
+

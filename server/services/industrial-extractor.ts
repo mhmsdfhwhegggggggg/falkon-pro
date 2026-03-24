@@ -141,3 +141,4 @@ export class IndustrialExtractor {
 }
 
 export const industrialExtractor = IndustrialExtractor.getInstance();
+

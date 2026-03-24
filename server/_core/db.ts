@@ -20,3 +20,4 @@ function createThrowingDb(message: string) {
 export const db = url
   ? drizzle(postgres(url), { schema })
   : createThrowingDb("Database not configured. Please open the Setup tab and save Database URL.");
+

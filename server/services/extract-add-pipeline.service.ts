@@ -19,17 +19,22 @@ import { telegramClientService } from './telegram-client.service';
 import { ultraExtractor } from './ultra-extractor';
 import { channelShield } from './channel-shield';
 import * as db from '../db';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 export interface ExtractAddOptions {
   sourceGroupId: string;
   targetGroupIds: string[];
   accountId: number;
-  userId?: number; // Added for multi-account load balancing
+  userId?: number;
   filters: MemberFilters;
   speed: 'slow' | 'medium' | 'fast';
   maxMembers?: number;
   dryRun?: boolean;
-  operationId?: number; // Added for progress tracking
+  operationId?: number;
+  joinTarget?: boolean; // New: Join target group before adding
+  exportPath?: string; // New: Path to save extracted members
+  importPath?: string; // New: Path to load members from
 }
 
 // ... (MemberFilters, ExtractedMember, AddResult, PipelineStats interfaces remain same) [No, I need to keep them or the tool will cut them]
@@ -120,13 +125,25 @@ export class ExtractAddPipeline {
 
     try {
       // Phase 1: Extraction
-      const extractedMembers = await this.extractMembers(options);
-      this.logger.info(`[Pipeline] Extracted ${extractedMembers.length} members`);
+      let extractedMembers: ExtractedMember[] = [];
+      
+      if (options.importPath) {
+        extractedMembers = await this.importMembersFromFile(options.importPath);
+        this.logger.info(`[Pipeline] Imported ${extractedMembers.length} members from file`);
+      } else {
+        extractedMembers = await this.extractMembers(options);
+        this.logger.info(`[Pipeline] Extracted ${extractedMembers.length} members`);
+      }
+
+      if (options.exportPath) {
+        await this.exportMembersToFile(extractedMembers, options.exportPath);
+        this.logger.info(`[Pipeline] Exported members to ${options.exportPath}`);
+      }
 
       if (options.operationId) {
         await db.updateBulkOperation(options.operationId, {
           totalMembers: extractedMembers.length,
-          description: `Extracted ${extractedMembers.length} members. Filtering...`
+          description: options.importPath ? `Imported ${extractedMembers.length} members.` : `Extracted ${extractedMembers.length} members. Filtering...`
         });
       }
 
@@ -139,6 +156,11 @@ export class ExtractAddPipeline {
           description: `Filtered to ${filteredMembers.length} members. Adding...`,
           totalMembers: filteredMembers.length // Update total to the actual count to be added
         });
+      }
+
+      // Phase 2.5: Ensure Joining (Industrial Guard) prince
+      if (options.joinTarget) {
+        await this.ensureAllAccountsJoined(options);
       }
 
       // Phase 3: Adding
@@ -482,6 +504,91 @@ export class ExtractAddPipeline {
   }
 
   /**
+   * Export members to file (CSV or JSON)
+   */
+  private async exportMembersToFile(members: ExtractedMember[], filePath: string): Promise<void> {
+    const ext = path.extname(filePath).toLowerCase();
+    
+    if (ext === '.json') {
+      await fs.writeFile(filePath, JSON.stringify(members, null, 2));
+    } else {
+      // Default to CSV
+      const headers = ['id', 'username', 'firstName', 'lastName', 'qualityScore'];
+      const rows = members.map(m => [
+        m.id.toString(),
+        m.username || '',
+        m.firstName || '',
+        m.lastName || '',
+        m.qualityScore.toString()
+      ].join(','));
+      
+      await fs.writeFile(filePath, [headers.join(','), ...rows].join('\n'));
+    }
+  }
+
+  /**
+   * Import members from file
+   */
+  private async importMembersFromFile(filePath: string): Promise<ExtractedMember[]> {
+    const data = await fs.readFile(filePath, 'utf-8');
+    const ext = path.extname(filePath).toLowerCase();
+    
+    if (ext === '.json') {
+      return JSON.parse(data);
+    } else {
+      // Basic CSV Parser
+      const lines = data.split('\n').filter(l => l.trim() !== '');
+      const headers = lines[0].split(',');
+      
+      return lines.slice(1).map(line => {
+        const values = line.split(',');
+        const member: any = {};
+        headers.forEach((header, index) => {
+          member[header.trim()] = values[index]?.trim();
+        });
+        
+        return {
+          id: member.id,
+          username: member.username || undefined,
+          firstName: member.firstName || '',
+          lastName: member.lastName || '',
+          qualityScore: parseInt(member.qualityScore) || 100,
+          riskLevel: 'low',
+          extractionTime: new Date(),
+          hasPhoto: false,
+          isPremium: false,
+          isBot: false,
+          isRestricted: false
+        } as ExtractedMember;
+      });
+    }
+  }
+
+  /**
+   * Ensure all active accounts have joined the target groups
+   */
+  private async ensureAllAccountsJoined(options: ExtractAddOptions): Promise<void> {
+    const allAccounts = await db.getTelegramAccountsByUserId(options.userId || 1);
+    const activeAccounts = allAccounts.filter((a: any) => a.status === 'active' || a.isActive);
+
+    this.logger.info(`[Pipeline] Industrial Join: Ensuring ${activeAccounts.length} accounts joined targets...`);
+
+    const { bulkJoiner } = await import('./bulk-joiner');
+
+    for (const account of activeAccounts) {
+      const client = await this.getTelegramClient(account.id);
+      for (const targetId of options.targetGroupIds) {
+        try {
+          await bulkJoiner.joinChat(client, account.id, targetId);
+          this.logger.info(`[Pipeline] Account ${account.id} joined target ${targetId}`);
+        } catch (e: any) {
+          this.logger.warn(`[Pipeline] Account ${account.id} failed to join ${targetId}: ${e.message}`);
+        }
+      }
+    }
+  }
+
+  /**
    * Get Telegram client
    */
   private async getTelegramClient(accountId: number): Promise<TelegramClient> {
@@ -491,13 +598,12 @@ export class ExtractAddPipeline {
       const account = await db.getTelegramAccountById(accountId);
       if (!account) throw new Error(`Account ${accountId} not found`);
 
-      const credentials = telegramClientService.getApiCredentials();
       return await telegramClientService.initializeClient(
         accountId,
         account.phoneNumber,
         account.sessionString,
-        credentials.apiId,
-        credentials.apiHash
+        account.apiId || undefined,
+        account.apiHash || undefined
       );
     }
     return client;
@@ -647,3 +753,4 @@ export class ExtractAddPipeline {
 
 // Export singleton
 export const extractAddPipeline = new ExtractAddPipeline();
+

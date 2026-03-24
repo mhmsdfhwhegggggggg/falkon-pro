@@ -70,7 +70,7 @@ class AlertSystem {
         url: process.env.ALERT_WEBHOOK_URL || '',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'Dragon-Telegram-Pro-Alerts/1.0',
+          'User-Agent': 'FALKON PRO-Telegram-Pro-Alerts/1.0',
         },
       },
       slack: {
@@ -105,7 +105,7 @@ class AlertSystem {
 
     const emailData = {
       to: this.config.email.recipients.join(','),
-      subject: `[${alert.severity}] ${alert.type} - Dragon Telegram Pro`,
+      subject: `[${alert.severity}] ${alert.type} - FALKON PRO Telegram Pro`,
       text: this.formatEmailText(alert),
       html: this.formatEmailHtml(alert),
     };
@@ -133,7 +133,7 @@ class AlertSystem {
 
     const slackMessage = {
       channel: this.config.slack.channel,
-      username: 'Dragon Telegram Pro',
+      username: 'FALKON PRO Telegram Pro',
       icon_emoji: this.getSeverityEmoji(alert.severity),
       text: `${alert.type}: ${alert.message}`,
       attachments: [{
@@ -162,7 +162,7 @@ class AlertSystem {
 
   private formatEmailText(alert: AlertData): string {
     return `
-Dragon Telegram Pro Alert
+FALKON PRO Telegram Pro Alert
 
 Type: ${alert.type}
 Severity: ${alert.severity}
@@ -171,7 +171,7 @@ Message: ${alert.message}
 
 ${alert.details ? `Details:\n${JSON.stringify(alert.details, null, 2)}` : ''}
 
-This is an automated alert from Dragon Telegram Pro.
+This is an automated alert from FALKON PRO Telegram Pro.
     `.trim();
   }
 
@@ -196,7 +196,7 @@ This is an automated alert from Dragon Telegram Pro.
 </head>
 <body>
     <div class="header">
-        <h2>🚨 Dragon Telegram Pro Alert</h2>
+        <h2>🚨 FALKON PRO Telegram Pro Alert</h2>
         <p><strong>Type:</strong> ${alert.type}</p>
         <p><strong>Severity:</strong> <span class="severity-${alert.severity.toLowerCase()}">${alert.severity}</span></p>
         <p><strong>Time:</strong> ${alert.timestamp}</p>
@@ -211,7 +211,7 @@ This is an automated alert from Dragon Telegram Pro.
     ` : ''}
     
     <hr>
-    <p><small>This is an automated alert from Dragon Telegram Pro.</small></p>
+    <p><small>This is an automated alert from FALKON PRO Telegram Pro.</small></p>
 </body>
 </html>
     `.trim();
@@ -239,3 +239,4 @@ This is an automated alert from Dragon Telegram Pro.
 }
 
 export const alertSystem = AlertSystem.getInstance();
+

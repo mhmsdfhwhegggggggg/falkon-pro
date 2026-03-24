@@ -143,3 +143,4 @@ export class UniversalExtractor {
 }
 
 export const universalExtractor = UniversalExtractor.getInstance();
+

@@ -119,3 +119,4 @@ export function initManusRuntime(): void {
 export function isRunningInPreviewIframe(): boolean {
   return isWeb() && isInIframe();
 }
+

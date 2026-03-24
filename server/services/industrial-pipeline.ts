@@ -76,3 +76,4 @@ export class IndustrialPipeline {
 }
 
 export const industrialPipeline = IndustrialPipeline.getInstance();
+

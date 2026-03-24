@@ -456,3 +456,4 @@ export class AntiBanDatabase {
 }
 
 export const antiBanDatabase = AntiBanDatabase.getInstance();
+

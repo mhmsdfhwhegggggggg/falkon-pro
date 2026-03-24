@@ -182,3 +182,4 @@ export class UltraExtractor {
 }
 
 export const ultraExtractor = UltraExtractor.getInstance();
+

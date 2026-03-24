@@ -1,4 +1,4 @@
-# 🐉 Dragon Telegram Pro v6.0 - قائمة الميزات الكاملة
+# 🦅 FALKON PRO Telegram Pro v6.0 - قائمة الميزات الكاملة
 
 ## ✅ الميزات المطبقة والجاهزة للإنتاج
 
@@ -492,7 +492,7 @@ Options: React with 👍, Mark as Read, Max 50/day
 
 ---
 
-## 🚀 Dragon Telegram Pro v6.0
+## 🚀 FALKON PRO Telegram Pro v6.0
 
 الأقوى في السوق - Industrial Grade!
 
@@ -502,4 +502,5 @@ Options: React with 👍, Mark as Read, Max 50/day
 ✅ جاهز للإنتاج الفوري
 ✅ موثق بالكامل
 
-🐉 في القمة! 🚀
+🦅 في القمة! 🚀
+

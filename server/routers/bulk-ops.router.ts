@@ -54,6 +54,9 @@ export const bulkOpsRouter = router({
         limit: z.number().min(1).max(100000).optional(),
         dedupeBy: z.enum(["telegramUserId", "username"]).default("telegramUserId"),
         delayMs: z.number().default(1500),
+        joinTarget: z.boolean().default(false),
+        exportPath: z.string().optional(),
+        importPath: z.string().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -73,6 +76,9 @@ export const bulkOpsRouter = router({
         limit: input.limit,
         dedupeBy: input.dedupeBy,
         delayMs: input.delayMs,
+        joinTarget: input.joinTarget,
+        exportPath: input.exportPath,
+        importPath: input.importPath,
       });
 
       return { queued: true, jobId: job.id } as const;
@@ -506,3 +512,4 @@ export const bulkOpsRouter = router({
       }
     }),
 });
+

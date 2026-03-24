@@ -37,3 +37,4 @@ try {
 } catch {
     Write-Host "❌ Redis connection failed" -ForegroundColor Red
 }
+

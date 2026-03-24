@@ -466,3 +466,4 @@ interface MergedDecision {
 
 type OperationType = 'message' | 'join_group' | 'add_user' | 'leave_group' | 'extract_members' | 'boost_engagement';
 type RiskLevel = 'minimal' | 'low' | 'medium' | 'high' | 'critical';
+

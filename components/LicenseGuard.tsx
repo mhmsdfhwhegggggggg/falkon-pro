@@ -15,8 +15,10 @@ export function LicenseGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const firstSegment = pathname.split('/').filter(Boolean)[0] || '';
   const { data: licenseStatus, isLoading, error } = trpc.license.getUserLicenses.useQuery({}, {
-    // Only fetch if we're not already on the activation screen
-    enabled: firstSegment !== 'license-activation' && firstSegment !== 'oauth',
+    // Only fetch if we're not already on the activation screen AND license check is enabled
+    enabled: firstSegment !== 'license-activation' && 
+             firstSegment !== 'oauth' && 
+             process.env.EXPO_PUBLIC_ENABLE_LICENSE_CHECK !== 'false',
     retry: false,
   });
 
@@ -29,6 +31,11 @@ export function LicenseGuard({ children }: { children: React.ReactNode }) {
     // If we have an error (e.g. 401 unauthed), the auth guard should handle it
     // but if we're logged in and have no active license, go to activation
     if (!isLoading && !inAuthGroup && !inActivationScreen) {
+      // Bypass if license check is disabled
+      const isBypass = process.env.EXPO_PUBLIC_ENABLE_LICENSE_CHECK === 'false';
+      console.log('LicenseGuard: isBypass=', isBypass, 'Segment=', firstSegment);
+      if (isBypass) return;
+
       const activeLicense = licenseStatus?.licenses?.find((l: any) => l.status === 'active');
       
       if (!activeLicense && licenseStatus?.success !== false) {
@@ -47,3 +54,4 @@ export function LicenseGuard({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+

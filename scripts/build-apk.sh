@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Dragon Telegram Pro - APK Build Script
+# FALKON PRO Telegram Pro - APK Build Script
 # This script automates the APK building process
 
 set -e
 
-echo "🚀 Dragon Telegram Pro - APK Build Script"
+echo "🚀 FALKON PRO Telegram Pro - APK Build Script"
 echo "=========================================="
 echo ""
 
@@ -101,8 +101,8 @@ case $choice in
             echo "   Size: $APK_SIZE"
             
             # Copy to root
-            cp "$APK_PATH" "./dragon-telegram-pro.apk"
-            echo "   Copied to: ./dragon-telegram-pro.apk"
+            cp "$APK_PATH" "./FALKON PRO-telegram-pro.apk"
+            echo "   Copied to: ./FALKON PRO-telegram-pro.apk"
         else
             echo -e "${RED}❌ Error: APK not found at $APK_PATH${NC}"
             exit 1
@@ -139,3 +139,4 @@ echo "1. Test the APK on real devices"
 echo "2. Check for any crashes or issues"
 echo "3. If everything works, proceed with distribution"
 echo ""
+

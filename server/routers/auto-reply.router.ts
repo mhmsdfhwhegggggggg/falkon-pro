@@ -9,7 +9,7 @@
  * - Daily limits and smart filtering
  * 
  * @version 6.0.0
- * @author Dragon Team
+ * @author FALKON PRO Team
  */
 
 import { z } from "zod";
@@ -503,3 +503,4 @@ export const autoReplyRouter = router({
       }
     })
 });
+

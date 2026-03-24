@@ -25,7 +25,7 @@ import { HardwareID } from './hardware-id';
  */
 async function initializeSecurity(): Promise<boolean> {
   console.log('═══════════════════════════════════════════════════════════');
-  console.log('🔐 Dragon Telegram Pro - Security Initialization');
+  console.log('🔐 FALKON PRO Telegram Pro - Security Initialization');
   console.log('═══════════════════════════════════════════════════════════\n');
   
   // 1. Enable Anti-Debugging (first line of defense)
@@ -166,7 +166,7 @@ async function main() {
     
     const server = app.listen(PORT, () => {
       console.log('╔════════════════════════════════════════════════════════╗');
-      console.log('║         Dragon Telegram Pro Server Started            ║');
+      console.log('║         FALKON PRO Telegram Pro Server Started            ║');
       console.log('╠════════════════════════════════════════════════════════╣');
       console.log(`║ Port:          ${PORT.toString().padEnd(40)} ║`);
       console.log(`║ Environment:   ${(process.env.NODE_ENV || 'development').padEnd(40)} ║`);
@@ -217,3 +217,4 @@ async function main() {
 
 // Start the server
 main();
+

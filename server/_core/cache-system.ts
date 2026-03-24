@@ -505,3 +505,4 @@ export function initializeCacheSystem(redis: Redis): CacheSystem {
 
 // Export singleton getter
 export const getCache = () => CacheSystem.getInstance();
+

@@ -10,3 +10,4 @@ export function useColors(colorSchemeOverride?: ColorScheme): ThemeColorPalette 
   const scheme = (colorSchemeOverride ?? colorSchema ?? "light") as ColorScheme;
   return Colors[scheme];
 }
+

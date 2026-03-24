@@ -276,3 +276,4 @@ export class ProxyIntelligenceManager {
 export type OperationType = 'message' | 'join_group' | 'add_user' | 'leave_group' | 'extract_members' | 'boost_engagement' | 'extract' | 'send_message';
 
 export const proxyIntelligenceManager = ProxyIntelligenceManager.getInstance();
+

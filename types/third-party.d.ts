@@ -13,3 +13,4 @@ declare module '@expo/vector-icons/Ionicons' {
     const Ionicons: Icon<string, string>;
     export default Ionicons;
 }
+

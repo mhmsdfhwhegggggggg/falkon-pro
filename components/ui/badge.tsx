@@ -44,3 +44,4 @@ export function Badge({ children, variant = 'primary', className = '' }: BadgePr
         </View>
     );
 }
+

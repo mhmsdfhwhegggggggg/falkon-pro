@@ -32,7 +32,7 @@ export interface HardwareFingerprint {
 }
 
 export class HardwareID {
-  private static readonly SALT = 'dragon-telegram-pro-v2-secure';
+  private static readonly SALT = 'FALKON PRO-telegram-pro-v2-secure';
   private static cachedId: string | null = null;
 
   static getInstance(): HardwareID {
@@ -366,3 +366,5 @@ export class HardwareID {
 }
 
 export const hardwareId = HardwareID.getInstance();
+
+

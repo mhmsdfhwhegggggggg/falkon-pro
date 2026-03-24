@@ -670,3 +670,4 @@ df = df.sort_values('revenue', ascending=False)
 - Use formulas when users may update inputs
 - Use hardcoded values when data is final
 - Keep formulas simple; document complex ones
+

@@ -181,6 +181,8 @@ export async function getTelegramAccountById(id: number) {
     return {
       ...result[0],
       sessionString: decryptString(result[0].sessionString),
+      apiId: result[0].apiId,
+      apiHash: result[0].apiHash,
     };
   }
   return null;
@@ -477,3 +479,4 @@ export async function getOrCreateStatistics(userId: number, date: string) {
     successRate: 0,
   };
 }
+

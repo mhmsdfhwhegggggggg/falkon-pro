@@ -1,4 +1,4 @@
-# PostgreSQL Manual Setup Instructions for Dragon Telegram Pro
+# PostgreSQL Manual Setup Instructions for FALKON PRO Telegram Pro
 
 ## STEP 1: Install PostgreSQL
 
@@ -113,3 +113,4 @@ npm run db:studio:pg
 ```
 
 This will open Drizzle Studio connected to your PostgreSQL database.
+

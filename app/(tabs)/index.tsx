@@ -7,7 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { useRouter } from "expo-router";
 
 /**
- * Home Screen - Dragaan Pro Dashboard
+ * Home Screen - FALKON PRO Pro Dashboard
  * 
  * Displays system overview, statistics, and quick actions for all major features.
  * Optimized for high performance and modern look.
@@ -83,7 +83,7 @@ export default function HomeScreen() {
           <View className="flex-row items-center justify-between">
             <View className="gap-1">
               <Text className="text-3xl font-bold text-foreground">
-                Dragaan Pro
+                FALKON PRO
               </Text>
               <Text className="text-sm text-muted">
                 نظام إدارة Telegram المتكامل
@@ -295,3 +295,4 @@ export default function HomeScreen() {
     </ScreenContainer>
   );
 }
+

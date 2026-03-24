@@ -33,7 +33,7 @@ export async function getHardwareId(): Promise<string> {
     } else {
       // For Native (Expo)
       // installationId is deprecated but still provides a good fallback for consistency
-      const expoId = Constants.expoConfig?.extra?.eas?.projectId || 'dragon';
+      const expoId = Constants.expoConfig?.extra?.eas?.projectId || 'FALKON PRO';
       const deviceId = Constants.sessionId || nanoid(12);
       newHwid = `${Platform.OS}-${deviceId}-${expoId}`;
     }
@@ -51,3 +51,4 @@ export async function getHardwareId(): Promise<string> {
     return `fallback-${nanoid(8)}`;
   }
 }
+
