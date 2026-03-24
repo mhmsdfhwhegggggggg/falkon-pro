@@ -81,3 +81,4 @@ export class ProxyMeshSystem {
 }
 
 export const getProxyMesh = (redis: Redis) => ProxyMeshSystem.getInstance(redis);
+

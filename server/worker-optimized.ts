@@ -105,3 +105,4 @@ export class OptimizedWorker {
 if (require.main === module) {
   new OptimizedWorker('normal-priority');
 }
+

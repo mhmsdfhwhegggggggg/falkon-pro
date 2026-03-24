@@ -1,5 +1,5 @@
 # Simple Redis Setup for Windows
-Write-Host "🔧 Setting up Redis for Dragon Telegram Pro..." -ForegroundColor Yellow
+Write-Host "🔧 Setting up Redis for FALKON PRO Telegram Pro..." -ForegroundColor Yellow
 
 # Check if Redis is already running
 $redisProcess = Get-Process -Name "redis-server" -ErrorAction SilentlyContinue
@@ -42,3 +42,4 @@ if (Test-Path "C:\Program Files\Redis\redis-server.exe") {
         Write-Host "❌ Failed to start Redis" -ForegroundColor Red
     }
 }
+

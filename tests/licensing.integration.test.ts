@@ -151,3 +151,4 @@ describe("Licensing Integration", () => {
         await expect(userCaller.license.getAnalytics()).rejects.toThrow(/You do not have required permission/i);
     });
 });
+

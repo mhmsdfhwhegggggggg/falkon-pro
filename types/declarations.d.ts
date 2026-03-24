@@ -50,3 +50,4 @@ declare module 'lucide-react-native' {
     export const Smartphone: any;
     export const CheckCircle: any;
 }
+

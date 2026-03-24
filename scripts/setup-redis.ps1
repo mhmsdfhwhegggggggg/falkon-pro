@@ -1,5 +1,5 @@
 # Redis Setup Script for Windows
-Write-Host "🔧 Setting up Redis for Dragon Telegram Pro..." -ForegroundColor Yellow
+Write-Host "🔧 Setting up Redis for FALKON PRO Telegram Pro..." -ForegroundColor Yellow
 
 # Check if Redis is already running
 $redisProcess = Get-Process -Name "redis-server" -ErrorAction SilentlyContinue
@@ -84,3 +84,4 @@ Remove-Item $redisPath -ErrorAction SilentlyContinue
 
 Write-Host "🎉 Redis setup completed!" -ForegroundColor Green
 Write-Host "📍 Redis is now available at: redis://127.0.0.1:6379" -ForegroundColor Cyan
+

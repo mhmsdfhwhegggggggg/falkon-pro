@@ -3,7 +3,7 @@ import * as ReactNative from "react-native";
 
 // Extract scheme from bundle ID (last segment timestamp, prefixed with "manus")
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
-const bundleId = "space.manus.dragon.telegram.pro.mobile.t20260204132529";
+const bundleId = "space.manus.FALKON PRO.telegram.pro.mobile.t20260204132529";
 const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
 const schemeFromBundleId = `manus${timestamp}`;
 
@@ -129,3 +129,4 @@ export async function startOAuthLogin(): Promise<string | null> {
   // The OAuth callback will reopen the app via deep link.
   return null;
 }
+

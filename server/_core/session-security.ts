@@ -59,6 +59,8 @@ export class SessionSecurity {
    */
   private static deriveKey(): Buffer {
     const machineId = hardwareId.generateSync();
-    return crypto.scryptSync(machineId, 'dragon-salt', this.KEY_LENGTH);
+    return crypto.scryptSync(machineId, 'FALKON PRO-salt', this.KEY_LENGTH);
   }
 }
+
+

@@ -9,7 +9,7 @@
  * - Content modification & replacement
  * 
  * @version 6.0.0
- * @author Dragon Team
+ * @author FALKON PRO Team
  */
 
 import React, { useState, useEffect } from 'react';
@@ -553,3 +553,4 @@ export default function ChannelManagementScreen() {
     </ScreenContainer>
   );
 }
+

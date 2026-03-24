@@ -1,14 +1,14 @@
 #!/bin/bash
 
 ###############################################################################
-# Dragon Telegram Pro - Production Setup Script
+# FALKON PRO Telegram Pro - Production Setup Script
 # This script helps setup the application for production deployment
 ###############################################################################
 
 set -e  # Exit on error
 
 echo "========================================"
-echo "Dragon Telegram Pro - Production Setup"
+echo "FALKON PRO Telegram Pro - Production Setup"
 echo "========================================"
 echo ""
 
@@ -179,3 +179,4 @@ echo "   or with PM2: pm2 start server/pm2.config.cjs"
 echo ""
 print_warning "Important: Change all default secrets in production!"
 echo ""
+

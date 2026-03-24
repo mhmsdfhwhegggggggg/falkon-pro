@@ -23,7 +23,7 @@ export const ENV_POSTGRES = {
   nodeEnv: getEnvVar("NODE_ENV", "development"),
   isProduction: process.env.NODE_ENV === "production",
   isDevelopment: process.env.NODE_ENV === "development",
-  appName: getEnvVar("APP_NAME", "Dragon Telegram Pro"),
+  appName: getEnvVar("APP_NAME", "FALKON PRO Telegram Pro"),
   appVersion: getEnvVar("APP_VERSION", "1.0.0"),
   port: getEnvNumber("PORT", 3000),
   expoPort: getEnvNumber("EXPO_PORT", 8081),
@@ -93,7 +93,7 @@ export const ENV_POSTGRES = {
   smtpUser: getEnvVar("SMTP_USER"),
   smtpPass: getEnvVar("SMTP_PASS"),
   smtpFrom: getEnvVar("SMTP_FROM"),
-  smtpFromName: getEnvVar("SMTP_FROM_NAME", "Dragon Telegram Pro"),
+  smtpFromName: getEnvVar("SMTP_FROM_NAME", "FALKON PRO Telegram Pro"),
 
   // API Keys
   openAiApiKey: getEnvVar("OPENAI_API_KEY"),
@@ -119,3 +119,4 @@ export const ENV_POSTGRES = {
 };
 
 export default ENV_POSTGRES;
+

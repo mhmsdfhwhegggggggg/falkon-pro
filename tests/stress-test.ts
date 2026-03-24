@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 import { hashPassword } from '../server/_core/crypto';
 
 /**
- * Robust Authenticated Stress Test for Dragon Pro
+ * Robust Authenticated Stress Test for FALKON PRO Pro
  * Verifies system stability under high concurrent load with real auth and licensing.
  */
 
@@ -128,3 +128,4 @@ async function runStressTest() {
 }
 
 runStressTest().catch(console.error);
+

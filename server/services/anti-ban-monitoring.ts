@@ -667,3 +667,4 @@ export class AntiBanMonitoring {
 }
 
 export const antiBanMonitoring = AntiBanMonitoring.getInstance();
+

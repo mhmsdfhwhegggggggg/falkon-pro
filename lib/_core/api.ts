@@ -170,3 +170,4 @@ export async function establishSession(token: string): Promise<boolean> {
     return false;
   }
 }
+

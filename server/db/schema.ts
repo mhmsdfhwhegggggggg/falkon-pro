@@ -78,6 +78,8 @@ export const telegramAccounts = pgTable('telegram_accounts', {
   dailyLimit: integer('daily_limit').default(100).notNull(),
   lastActivityAt: timestamp('last_activity_at'),
   lastRestrictedAt: timestamp('last_restricted_at'),
+  apiId: integer('api_id'),
+  apiHash: varchar('api_hash', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -254,3 +256,4 @@ export type AutoReplyRule = typeof autoReplyRules.$inferSelect;
 export type InsertAutoReplyRule = typeof autoReplyRules.$inferInsert;
 export type ContentClonerRule = typeof contentClonerRules.$inferSelect;
 export type InsertContentClonerRule = typeof contentClonerRules.$inferInsert;
+

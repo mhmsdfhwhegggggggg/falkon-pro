@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "=== Testing Dragon Telegram Pro API Endpoints ==="
+echo "=== Testing FALKON PRO Telegram Pro API Endpoints ==="
 echo ""
 
 # Colors
@@ -29,7 +29,7 @@ fi
 echo ""
 
 echo "3. Database Connection..."
-if sudo -u postgres psql -d dragon_telegram_pro -c "SELECT COUNT(*) FROM users;" > /dev/null 2>&1; then
+if sudo -u postgres psql -d FALKON PRO_telegram_pro -c "SELECT COUNT(*) FROM users;" > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Database connected${NC}"
 else
     echo -e "${RED}✗ Database connection failed${NC}"
@@ -46,3 +46,5 @@ echo ""
 
 echo "=== Test Summary ==="
 echo "All core components are operational!"
+
+

@@ -317,3 +317,4 @@ export function getSafeErrorMessage(error: Error | AppError): string {
 
   return error.message;
 }
+

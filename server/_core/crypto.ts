@@ -251,3 +251,4 @@ export function testEncryption(): boolean {
     return false;
   }
 }
+

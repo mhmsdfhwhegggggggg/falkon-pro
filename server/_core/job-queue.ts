@@ -267,3 +267,4 @@ export class JobQueueSystem {
 // Export singleton instance
 export const JobQueue = JobQueueSystem;
 export const getJobQueue = () => JobQueue.getInstance();
+

@@ -23,7 +23,7 @@ export const ENV = {
   nodeEnv: getEnvVar("NODE_ENV", "development"),
   isProduction: process.env.NODE_ENV === "production",
   isDevelopment: process.env.NODE_ENV === "development",
-  appName: getEnvVar("APP_NAME", "Dragon Telegram Pro"),
+  appName: getEnvVar("APP_NAME", "FALKON PRO Telegram Pro"),
   appVersion: getEnvVar("APP_VERSION", "1.0.0"),
   port: getEnvNumber("PORT", 3000),
   expoPort: getEnvNumber("EXPO_PORT", 8081),
@@ -48,7 +48,7 @@ export const ENV = {
 
   // OAuth
   oAuthServerUrl: getEnvVar("OAUTH_SERVER_URL", "https://oauth.dragaan-pro.com"),
-  appId: getEnvVar("APP_ID", "dragon_telegram_pro_mobile"),
+  appId: getEnvVar("APP_ID", "FALKON PRO_telegram_pro_mobile"),
   ownerOpenId: getEnvVar("OWNER_OPEN_ID", ""),
 
   // CORS
@@ -180,3 +180,5 @@ export function printEnvConfig(): void {
   console.log(`License Check: ${ENV.enableLicenseCheck ? "✓ Enabled" : "✗ Disabled"}`);
   console.log("================================\n");
 }
+
+

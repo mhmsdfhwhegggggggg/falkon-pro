@@ -13,7 +13,7 @@ const insertUser = db.prepare(`
 
 const passwordHash = crypto.createHash("sha256").update("demo123").digest("hex");
 const userResult = insertUser.run(
-  "demo@dragontelegram.pro",
+  "demo@FALKON PROtelegram.pro",
   "demo_user",
   passwordHash,
   1
@@ -379,5 +379,6 @@ console.log(`   - Bulk Operations: ${operations.length}`);
 console.log(`   - Proxies: ${proxies.length}`);
 console.log(`   - Groups: ${groups.length}`);
 console.log("\n🔑 Demo Credentials:");
-console.log(`   Email: demo@dragontelegram.pro`);
+console.log(`   Email: demo@FALKON PROtelegram.pro`);
 console.log(`   Password: demo123`);
+

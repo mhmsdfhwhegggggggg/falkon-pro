@@ -500,3 +500,4 @@ export class ActivationSystem {
 }
 
 export const activationSystem = ActivationSystem.getInstance();
+

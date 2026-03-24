@@ -1,5 +1,5 @@
 # Production Deployment Script
-Write-Host "🚀 Dragon Telegram Pro - Production Deployment" -ForegroundColor Yellow
+Write-Host "🚀 FALKON PRO Telegram Pro - Production Deployment" -ForegroundColor Yellow
 
 # Check prerequisites
 Write-Host "🔍 Checking prerequisites..." -ForegroundColor Blue
@@ -110,7 +110,7 @@ Write-Host "🚀 Starting production deployment..." -ForegroundColor Blue
 $env:NODE_ENV = "production"
 
 # Start the application
-Write-Host "🌟 Starting Dragon Telegram Pro..." -ForegroundColor Green
+Write-Host "🌟 Starting FALKON PRO Telegram Pro..." -ForegroundColor Green
 Write-Host "📍 Server will be available at: http://localhost:3000" -ForegroundColor Cyan
 Write-Host "📊 Health check: http://localhost:3000/api/health" -ForegroundColor Cyan
 Write-Host "🔧 Worker process will run in background" -ForegroundColor Cyan
@@ -132,3 +132,4 @@ Write-Host "   1. Configure your Telegram API credentials" -ForegroundColor Whit
 Write-Host "   2. Set up your domain and SSL" -ForegroundColor White
 Write-Host "   3. Configure OAuth provider" -ForegroundColor White
 Write-Host "   4. Set up monitoring and logging" -ForegroundColor White
+

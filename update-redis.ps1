@@ -40,3 +40,4 @@ try {
 
 # Clean up
 Remove-Item -Path $tempDir -Recurse -Force
+

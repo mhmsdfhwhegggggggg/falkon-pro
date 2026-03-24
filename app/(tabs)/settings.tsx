@@ -74,7 +74,7 @@ export default function SettingsScreen() {
           {/* Header */}
           <View className="mb-6">
             <Text className="text-3xl font-bold text-foreground">الإعدادات</Text>
-            <Text className="text-sm text-muted mt-1">تحكم في أداء وأمان نظام Dragaan</Text>
+            <Text className="text-sm text-muted mt-1">تحكم في أداء وأمان نظام FALKON PRO</Text>
           </View>
 
           {/* Security & Protection */}
@@ -168,11 +168,12 @@ export default function SettingsScreen() {
 
           {/* Version Info */}
           <View className="items-center py-8">
-            <Text className="text-xs text-muted">Dragaan Pro v1.0.0 (Build 20260207)</Text>
-            <Text className="text-[10px] text-muted mt-1">© 2026 Dragaan Systems. All rights reserved.</Text>
+            <Text className="text-xs text-muted">FALKON PRO Pro v1.0.0 (Build 20260207)</Text>
+            <Text className="text-[10px] text-muted mt-1">© 2026 FALKON PRO Systems. All rights reserved.</Text>
           </View>
         </View>
       </ScrollView>
     </ScreenContainer>
   );
 }
+

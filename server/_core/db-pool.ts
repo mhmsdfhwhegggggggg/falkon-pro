@@ -61,7 +61,7 @@ export class DatabasePool extends EventEmitter {
       keepAliveInitialDelayMillis: 10000,
 
       // Application name for monitoring
-      application_name: 'dragon-telegram-pro',
+      application_name: 'FALKON PRO-telegram-pro',
     });
 
     // Initialize metrics
@@ -343,3 +343,5 @@ export function initializeDatabasePool(): DatabasePool {
 
 // Export singleton getter
 export const getPool = () => DatabasePool.getInstance();
+
+

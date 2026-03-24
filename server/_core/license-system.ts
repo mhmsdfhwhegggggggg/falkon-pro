@@ -62,14 +62,14 @@ export class LicenseSystem {
   private constructor() {
     this.licenseFilePath = path.join(process.cwd(), '.license');
     this.encryptionKey = process.env.ENCRYPTION_KEY || this.generateKey();
-    this.licenseServerUrl = process.env.LICENSE_SERVER_URL || 'https://license.dragon-telegram.pro';
+    this.licenseServerUrl = process.env.LICENSE_SERVER_URL || 'https://license.FALKON PRO-telegram.pro';
 
     this.httpClient = axios.create({
       baseURL: this.licenseServerUrl,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'Dragon-Telegram-Pro/2.0.0',
+        'User-Agent': 'FALKON PRO-Telegram-Pro/2.0.0',
       },
     });
   }
@@ -588,3 +588,5 @@ export class LicenseSystem {
 
 // Export singleton instance
 export const licenseSystem = LicenseSystem.getInstance();
+
+

@@ -357,3 +357,4 @@ export class LicenseManager {
 }
 
 export const licenseManager = LicenseManager.getInstance();
+

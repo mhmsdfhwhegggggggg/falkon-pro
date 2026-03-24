@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Dragon Telegram Pro - APK Build Script
+# FALKON PRO Telegram Pro - APK Build Script
 # This script helps you build APK quickly
 
 set -e
 
-echo "🚀 Dragon Telegram Pro - APK Builder"
+echo "🚀 FALKON PRO Telegram Pro - APK Builder"
 echo "===================================="
 echo ""
 
@@ -53,3 +53,4 @@ echo "📱 You can monitor the build at: https://expo.dev/accounts/[your-account
 echo ""
 echo "💡 Tip: Use 'eas build:list' to see all builds"
 echo ""
+

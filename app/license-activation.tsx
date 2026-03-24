@@ -53,7 +53,7 @@ export default function LicenseActivationScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>تفعيل التنين برو 🐉</Text>
+        <Text style={styles.title}>تفعيل فالكون برو 🦅</Text>
         <Text style={styles.subtitle}>يرجى إدخال مفتاح الترخيص الخاص بك للمتابعة</Text>
 
         <View style={styles.inputContainer}>
@@ -226,3 +226,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   }
 });
+

@@ -1,5 +1,5 @@
 # Generate Secure Production Secrets
-Write-Host "🔐 Generating secure production secrets for Dragon Telegram Pro..." -ForegroundColor Yellow
+Write-Host "🔐 Generating secure production secrets for FALKON PRO Telegram Pro..." -ForegroundColor Yellow
 
 # Generate secure random values
 $encryptionKey = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object {[char]$_})
@@ -9,12 +9,12 @@ $sessionEncKey = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes
 
 # Create production .env file
 $envContent = @"
-# Dragon Telegram Pro - Production Environment Variables
+# FALKON PRO Telegram Pro - Production Environment Variables
 # Generated on $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
 
 # Application
 NODE_ENV=production
-APP_NAME=Dragon Telegram Pro
+APP_NAME=FALKON PRO Telegram Pro
 APP_VERSION=6.0.0
 PORT=3000
 EXPO_PORT=8081
@@ -120,3 +120,4 @@ Write-Host "   - TELEGRAM_API_ID and TELEGRAM_API_HASH from my.telegram.org" -Fo
 Write-Host "   - DATABASE_URL for your PostgreSQL instance" -ForegroundColor White
 Write-Host "   - CORS_ORIGINS for your domain" -ForegroundColor White
 Write-Host "   - OAuth configuration" -ForegroundColor White
+

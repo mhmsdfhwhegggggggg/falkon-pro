@@ -5,7 +5,7 @@ import { trpc } from '@/lib/trpc';
 /**
  * Activation Screen
  * 
- * License activation interface for Dragon Telegram Pro
+ * License activation interface for FALKON PRO Telegram Pro
  * Features:
  * - Online activation
  * - Offline activation
@@ -127,7 +127,7 @@ export default function ActivationScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>🔐 تفعيل الترخيص</Text>
-        <Text style={styles.headerSubtitle}>قم بتفعيل ترخيص Dragon Telegram Pro</Text>
+        <Text style={styles.headerSubtitle}>قم بتفعيل ترخيص FALKON PRO Telegram Pro</Text>
       </View>
 
       <View style={styles.hardwareSection}>
@@ -268,7 +268,7 @@ export default function ActivationScreen() {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          Dragon Telegram Pro v3.0 - نظام الترخيص المتقدم
+          FALKON PRO Telegram Pro v3.0 - نظام الترخيص المتقدم
         </Text>
         <Text style={styles.footerSubtext}>
           © 2024 جميع الحقوق محفوظة
@@ -544,3 +544,4 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
   },
 });
+

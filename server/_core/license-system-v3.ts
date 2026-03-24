@@ -11,7 +11,7 @@
  * - Developer Dashboard API
  * 
  * @version 3.0.0
- * @author Dragon Team
+ * @author FALKON PRO Team
  */
 
 import * as crypto from 'crypto';
@@ -123,7 +123,7 @@ export class LicenseSystemV3 {
   private isShuttingDown = false;
   
   private readonly config: LicenseServerConfig = {
-    url: process.env.LICENSE_SERVER_URL || 'https://license.dragon-telegram.pro',
+    url: process.env.LICENSE_SERVER_URL || 'https://license.FALKON PRO-telegram.pro',
     timeout: 10000,
     retryAttempts: 3,
     heartbeatInterval: 5 * 60 * 1000, // 5 minutes
@@ -138,7 +138,7 @@ export class LicenseSystemV3 {
       timeout: this.config.timeout,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'Dragon-Telegram-Pro/v6.0',
+        'User-Agent': 'FALKON PRO-Telegram-Pro/v6.0',
         'X-Client-Version': '6.0.0'
       }
     });
@@ -667,7 +667,7 @@ export class LicenseSystemV3 {
   private async generateClientId(): Promise<string> {
     const hardwareId = await HardwareID.generate();
     return crypto.createHash('sha256')
-      .update(hardwareId + 'dragon-telegram-pro-v6')
+      .update(hardwareId + 'FALKON PRO-telegram-pro-v6')
       .digest('hex');
   }
 
@@ -833,3 +833,5 @@ export class LicenseSystemV3 {
 
 // Export singleton
 export const licenseSystemV3 = LicenseSystemV3.getInstance();
+
+

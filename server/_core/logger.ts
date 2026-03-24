@@ -204,3 +204,4 @@ export const log = {
   error: (message: string, error?: Error | any, data?: any) => logger.error(message, error, data),
   fatal: (message: string, error?: Error | any, data?: any) => logger.fatal(message, error, data),
 };
+

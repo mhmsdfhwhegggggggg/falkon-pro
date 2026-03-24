@@ -62,7 +62,11 @@ export class TelegramClientService {
     apiId?: number,
     apiHash?: string
   ): Promise<TelegramClient> {
-    const credentials = apiId && apiHash ? { apiId, apiHash } : this.getApiCredentials();
+    const defaultCredentials = this.getApiCredentials();
+    const credentials = {
+      apiId: apiId && apiId !== 0 ? apiId : defaultCredentials.apiId,
+      apiHash: apiHash && apiHash !== "" ? apiHash : defaultCredentials.apiHash,
+    };
 
     if (!sessionString || sessionString.trim() === "") {
         throw new Error("Empty or missing session string for this account.");
@@ -474,3 +478,4 @@ export class TelegramClientService {
 }
 
 export const telegramClientService = new TelegramClientService();
+

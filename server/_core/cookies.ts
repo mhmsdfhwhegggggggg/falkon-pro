@@ -58,3 +58,4 @@ export function getSessionCookieOptions(
     secure: isSecureRequest(req),
   };
 }
+

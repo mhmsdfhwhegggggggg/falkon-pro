@@ -1,5 +1,5 @@
-# PostgreSQL Setup Script for Dragon Telegram Pro
-Write-Host "Setting up PostgreSQL for Dragon Telegram Pro..." -ForegroundColor Yellow
+# PostgreSQL Setup Script for FALKON PRO Telegram Pro
+Write-Host "Setting up PostgreSQL for FALKON PRO Telegram Pro..." -ForegroundColor Yellow
 
 # Check if PostgreSQL is available
 try {
@@ -76,3 +76,4 @@ Write-Host "User: dragaan_user" -ForegroundColor White
 Write-Host "Password: dragaan_secure_password_2024" -ForegroundColor White
 Write-Host ""
 Write-Host "SECURITY NOTE: Change the default password in production!" -ForegroundColor Red
+

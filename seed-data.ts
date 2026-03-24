@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./server/db/schema";
 
-const connectionString = "postgresql://postgres:password@localhost:5432/dragon_telegram_pro";
+const connectionString = "postgresql://postgres:password@localhost:5432/FALKON PRO_telegram_pro";
 const client = postgres(connectionString);
 const db = drizzle(client, { schema });
 
@@ -12,7 +12,7 @@ async function seed() {
   // 1. Create a user
   const [user] = await db.insert(schema.users).values({
     email: "user@example.com",
-    username: "DragonUser",
+    username: "FALKON PROUser",
     password: "hashed_password",
   }).returning();
   
@@ -73,3 +73,5 @@ async function seed() {
 }
 
 seed().catch(console.error);
+
+

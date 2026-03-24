@@ -9,7 +9,7 @@
  * - Schedule management
  * 
  * @version 6.1.1
- * @author Dragon Team
+ * @author FALKON PRO Team
  */
 
 import { telegramClientService } from './telegram-client.service';
@@ -574,3 +574,4 @@ export class ContentClonerService {
 }
 
 export const contentClonerService = ContentClonerService.getInstance();
+

@@ -126,3 +126,4 @@ server.listen(6379, '127.0.0.1', () => {
 Remove-Item -Path $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host "Redis setup completed!" -ForegroundColor Green
+

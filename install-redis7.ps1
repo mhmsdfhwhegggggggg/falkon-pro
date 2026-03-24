@@ -80,3 +80,4 @@ if ($attempts -eq $maxAttempts) {
 
 # Clean up
 Remove-Item -Path $tempDir -Recurse -Force
+

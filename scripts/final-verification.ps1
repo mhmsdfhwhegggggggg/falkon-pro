@@ -81,4 +81,5 @@ Write-Host "Development: npm run dev" -ForegroundColor Cyan
 Write-Host "Production:  npm run build && npm start" -ForegroundColor Cyan
 Write-Host "Worker:      npm run build:worker && npm run start:worker" -ForegroundColor Cyan
 
-Write-Host "`n✨ Dragon Telegram Pro v6.0 - Production Setup Complete!" -ForegroundColor Green
+Write-Host "`n✨ FALKON PRO Telegram Pro v6.0 - Production Setup Complete!" -ForegroundColor Green
+

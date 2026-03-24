@@ -10,7 +10,7 @@ $sessionEncKey = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes
 # Create production .env file
 $envContent = @"
 NODE_ENV=production
-APP_NAME=Dragon Telegram Pro
+APP_NAME=FALKON PRO Telegram Pro
 APP_VERSION=6.0.0
 PORT=3000
 EXPO_PORT=8081
@@ -82,3 +82,4 @@ Write-Host "IMPORTANT: Update these values in production:" -ForegroundColor Yell
 Write-Host "   - TELEGRAM_API_ID and TELEGRAM_API_HASH from my.telegram.org" -ForegroundColor White
 Write-Host "   - DATABASE_URL for your PostgreSQL instance" -ForegroundColor White
 Write-Host "   - CORS_ORIGINS for your domain" -ForegroundColor White
+

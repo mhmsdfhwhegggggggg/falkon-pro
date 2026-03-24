@@ -156,3 +156,4 @@ export class PermissionManager {
 }
 
 export const permissionManager = PermissionManager.getInstance();
+
